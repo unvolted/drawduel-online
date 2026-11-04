@@ -40,8 +40,8 @@ function event(res, kind, data) { if (!res.destroyed && !res.writableEnded) res.
 function stateFor(room, seat) {
   return { code:room.code, seat, host:seat === 0, stage:room.stage, mode:room.mode,
     players:room.players.map(p => p ? { name:p.name, online:connected(p) } : null),
-    settings: { ...room.settings, names: room.players.map((p,i) => p?.name || `Player ${i+1}`) },
-    round:room.round, prompt:room.prompt, remainingMs:room.remainingMs, endAt:room.endAt,
+    settings: { ...room.settings, custom:room.stage==='waiting'?'':room.settings.custom, names: room.players.map((p,i) => p?.name || `Player ${i+1}`) },
+    round:room.round, prompt:room.prompt, promptsReady:room.prompts.map(Boolean), remainingMs:room.remainingMs, endAt:room.endAt,
     scores:room.scores, art:room.art, winner:room.winner, gallery:room.gallery,
     voted:seat >= 0 && Object.hasOwn(room.votes, seat), votesCast:Object.keys(room.votes).length };
 }
@@ -68,7 +68,7 @@ function expireClock(room) {
 function resetBattle(room) {
   room.stage='battle'; room.mode='ready'; room.round=1; room.scores=[0,0]; room.used=[];
   room.gallery=[]; room.winner=null; room.art=[null,null]; room.votes={};
-  room.prompt=room.settings.custom || nextPrompt(room); room.remainingMs=room.settings.duration*1000; room.endAt=0;
+  room.prompt=room.prompts[crypto.randomInt(room.prompts.length)]; room.settings.custom=room.prompt; room.remainingMs=room.settings.duration*1000; room.endAt=0;
 }
 function handleAction(room, seat, body, res) {
   expireClock(room);
@@ -78,6 +78,7 @@ function handleAction(room, seat, body, res) {
   if (a === 'begin') {
     if (room.stage !== 'waiting') return fail(res, 409, 'The battle already started.');
     if (!room.players.every(connected)) return fail(res, 409, 'Both artists must be connected first.');
+    if (!room.prompts.every(Boolean)) return fail(res, 409, 'Each artist must submit exactly one drawing prompt first.');
     resetBattle(room);
   } else if (a === 'clock') {
     if (room.stage !== 'battle' || !['ready','paused'].includes(room.mode)) return fail(res,409,'Cannot start the clock right now.');
@@ -89,8 +90,7 @@ function handleAction(room, seat, body, res) {
     if (room.stage !== 'battle' || room.mode === 'finished') return fail(res,409,'Not in a drawing round.');
     room.remainingMs+=15000; if (room.mode === 'drawing') room.endAt+=15000;
   } else if (a === 'reroll') {
-    if (room.stage !== 'battle' || room.mode !== 'ready' || room.round !== 1) return fail(res,409,'You can only change the challenge before round one starts.');
-    room.settings.custom=''; room.prompt=nextPrompt(room);
+    return fail(res,409,'The shared challenge comes from the players and cannot be rerolled.');
   } else if (a === 'finish') {
     if (room.stage !== 'battle') return fail(res,409,'Not in a drawing round.');
     room.stage='vote'; room.mode='finished'; room.endAt=0; room.remainingMs=0; room.votes={};
@@ -146,8 +146,10 @@ const server = http.createServer(async (req,res) => {
   let body;try {body=await readJson(req);} catch(e){return fail(res,e.status||400,e.message);}
   if (!body || typeof body !== 'object' || Array.isArray(body)) return fail(res,400,'Expected a JSON object.');
   if (url.pathname==='/api/create') {
+    const settings=validSettings(body.settings);
+    if (!settings.custom) return fail(res,400,'Enter one drawing prompt before creating a room.');
     const roomCode=code(), host=person(body.name || 'Player 1');
-    const room={code:roomCode,players:[host,null],settings:validSettings(body.settings),stage:'waiting',mode:'ready',round:1,
+    const room={code:roomCode,players:[host,null],settings,prompts:[settings.custom,null],stage:'waiting',mode:'ready',round:1,
       prompt:'',remainingMs:90000,endAt:0,scores:[0,0],art:[null,null],votes:{},gallery:[],used:[],winner:null,updatedAt:Date.now()};
     rooms.set(roomCode,room);return send(res,200,{code:roomCode,token:host.token,seat:0});
   }
@@ -158,7 +160,9 @@ const server = http.createServer(async (req,res) => {
     if(seat<0) {
       const player1=room.players[1];
       if(!player1 || (!connected(player1) && player1.disconnectedAt && Date.now()-player1.disconnectedAt>120000)) {
-        room.players[1]=person(body.name || 'Player 2');seat=1;
+        const artistPrompt=trim(body.prompt,90);
+        if (!artistPrompt) return fail(res,400,'Enter one drawing prompt before joining the room.');
+        room.players[1]=person(body.name || 'Player 2');room.prompts[1]=artistPrompt;seat=1;
       } else return fail(res,409,'This room already has two players.');
     }
     broadcast(room);return send(res,200,{code:room.code,token:room.players[seat].token,seat});
