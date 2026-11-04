@@ -387,7 +387,7 @@
         </div>
         <div class="two-col">
           <div class="field"><label for="duration">Round timer</label><select id="duration"><option value="45">45 seconds — Speedrun</option><option value="60">60 seconds — Fast</option><option value="90" selected>90 seconds — Classic</option><option value="120">2 minutes</option><option value="180">3 minutes</option><option value="300">5 minutes — Chill</option></select></div>
-          <div class="field"><label for="rounds">Number of rounds (same prompt)</label><select id="rounds"><option value="1" selected>1 round — Quick duel</option><option value="3">3 rounds — Best of 3</option><option value="5">5 rounds — Showdown</option><option value="7">7 rounds — Marathon</option><option value="10">10 rounds — Legend</option></select></div>
+          <div class="field"><label for="rounds">Number of rounds (new prompts each round)</label><select id="rounds"><option value="1" selected>1 round — Quick duel</option><option value="3">3 rounds — Best of 3</option><option value="5">5 rounds — Showdown</option><option value="7">7 rounds — Marathon</option><option value="10">10 rounds — Legend</option></select></div>
         </div>
         
         <button id="localStartBtn" type="button" class="primary full">START LOCAL BATTLE <svg class="ic"><use href="#ic-play"/></svg></button>
@@ -731,7 +731,7 @@
       $('#resumeBtn').addEventListener('click',resume);
       $('#startPauseBtn').addEventListener('click',()=>{if(online){onlineAction(state.mode==='drawing'?'pause':'clock');return;}if(state.mode==='drawing')pauseClock();else startClock();});
       $('#extraBtn').addEventListener('click',()=>{if(online){onlineAction('extra');return;}state.remaining+=15;if(state.mode==='drawing')state.endAt=performance.now()+state.remaining*1000;renderTimer();notify('+15 seconds added!');saveSoon();});
-      $('#newPromptBtn').addEventListener('click',()=>{if(online){onlineAction('reroll');return;}if(state.mode!=='ready'||state.round!==1)return;state.settings.custom='';state.prompt=choosePrompt();renderBattle();notify('One new prompt chosen for the whole battle!');saveSoon();});
+      
       $('#judgeBtn').addEventListener('click',()=>{if(state.mode==='drawing'&&state.remaining>0&&!confirm('End this round early and open voting?'))return;if(online){onlineAction('finish');return;}openVoting();});
       $('#exitBtn').addEventListener('click',()=>{if(online){if(confirm('Leave this online room? You can rejoin with the same code.'))leaveOnline();return;}if(!confirm('Leave this battle? Your current drawing is saved so you can resume later.'))return;pauseClock();saveSoon();setStage('lobby');updateResume();});
       $$('[data-vote]').forEach(btn=>btn.addEventListener('click',()=>online?onlineAction('vote',{vote:btn.dataset.vote}):recordVote(btn.dataset.vote)));
