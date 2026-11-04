@@ -1,0 +1,8 @@
+{
+  "name": "drawduel-online",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Two-player online and local drawing battles",
+  "scripts": {"start":"node server.js"},
+  "engines": {"node":">=20"}
+}
