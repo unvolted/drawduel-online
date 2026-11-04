@@ -1,4 +1,4 @@
-**Single-prompt update:** The match uses exactly one shared prompt. The default is one round, while longer matches can use the same prompt every round.
+**Round prompt update:** There are no prompt fields in the main menu. Before each round, both players submit one new prompt; the game picks one of the two as the shared drawing challenge for that round.
 
 # Draw Duel — Online Drawing Battles
 
@@ -33,7 +33,7 @@ This ZIP contains the entire app **and the multiplayer server**. Upload the cont
 - 10 drawing tools: pencil, marker, spray, eraser, bucket fill, line, rectangle, ellipse, eyedropper, text
 - Palette + custom colors, brush slider, filled shapes, grid, undo/redo, canvas focus, clear, PNG export
 - Responsive side-by-side canvas + tool rack (no scrolling between a canvas and its tools), plus keyboard shortcuts
-- One shared drawing prompt per match across all rounds (custom or random); reroll is available before the first round starts
+- One new prompt submitted by each player before every drawing round; one randomly selected shared challenge per round
 - 45/60/90/120/180/300-second timer; 1/3/5/7/10 rounds; pause and +15 seconds
 - Online room creation/joining, shared clock and scores, streamed drawings, two-person voting, tie results, next-round and rematch controls
 - Local autosave and resume; browser-based sound effects and results gallery
@@ -41,7 +41,7 @@ This ZIP contains the entire app **and the multiplayer server**. Upload the cont
 
 ## Online game rules
 
-Only the **room host** starts the match, controls the clock, adds time, rerolls, and advances rounds. Each person draws on their own canvas while the other artwork is visible. When the timer ends or the host finishes the round, each player votes once for Player 1, Player 2, or a tie. If both agree, the chosen player wins; if the votes differ, the result is a tie. The final scoreboard appears after the chosen number of rounds.
+Only the **room host** starts the match, controls the clock, adds time and advances rounds. After both players join, each submits one new prompt for round 1; one is randomly chosen. This repeats before every later round. Each person sees only their own canvas and tools during online drawing, with both artworks shown during voting. When the timer ends or the host finishes the round, each player votes once for Player 1, Player 2, or a tie. If both agree, the chosen player wins; if the votes differ, the result is a tie. The final scoreboard appears after the chosen number of rounds.
 
 ## Files
 
@@ -55,6 +55,6 @@ Only the **room host** starts the match, controls the clock, adds time, rerolls,
 
 No registration, lobby chat, or public matchmaking. Rooms are private-by-code and temporary. This version is intended for casual two-player games, not a production account system.
 
-## Latest update — shared prompt + compact studio
+## Latest update — fresh prompts every round
 
-The host can enter **one prompt**, which is shown to **both players** and is reused in **every round**. If left blank, a single randomly generated prompt is used for the whole match. The prompt can only be rerolled before round one begins. On desktop and mobile, each drawing canvas stays alongside its ten drawing tools, colors and brush-size control instead of stacking the tools below the canvas.
+In both local and online modes, creating or joining a match does not require a prompt. After the match starts and **before every round**, each player types one new prompt. The game randomly selects one shared challenge for both players to draw that round. Each online player sees only their own canvas while drawing; both artworks appear during voting. The drawing tools, colors, and brush-size control stay next to the canvas.
