@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: drawduel-online
-    runtime: node
-    plan: free
-    buildCommand: cd drawing-battles-online && npm install
-    startCommand: cd drawing-battles-online && npm start
-    healthCheckPath: /healthz
