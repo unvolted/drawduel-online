@@ -1,4 +1,4 @@
-**Round prompt update:** There are no prompt fields in the main menu. Before each round, both players submit one new prompt; the game picks one of the two as the shared drawing challenge for that round.
+**Different prompts + canvas zoom:** There are no prompt fields in the menu. Before every round, each player writes a new prompt. Player 1 draws Player 2's prompt, and Player 2 draws Player 1's prompt. Each player can zoom their canvas from 100% to 400% and pan while zoomed in.
 
 # Draw Duel — Online Drawing Battles
 
@@ -31,9 +31,9 @@ This ZIP contains the entire app **and the multiplayer server**. Upload the cont
 ## Features
 
 - 10 drawing tools: pencil, marker, spray, eraser, bucket fill, line, rectangle, ellipse, eyedropper, text
-- Palette + custom colors, brush slider, filled shapes, grid, undo/redo, canvas focus, clear, PNG export
+- Palette + custom colors, brush slider, filled shapes, grid, undo/redo, canvas focus, 100–400% zoom with Pan mode/Shift-drag, clear, PNG export
 - Responsive side-by-side canvas + tool rack (no scrolling between a canvas and its tools), plus keyboard shortcuts
-- One new prompt submitted by each player before every drawing round; one randomly selected shared challenge per round
+- One unique prompt from each player before every drawing round; each artist receives the other person's prompt
 - 45/60/90/120/180/300-second timer; 1/3/5/7/10 rounds; pause and +15 seconds
 - Online room creation/joining, shared clock and scores, streamed drawings, two-person voting, tie results, next-round and rematch controls
 - Local autosave and resume; browser-based sound effects and results gallery
@@ -41,7 +41,7 @@ This ZIP contains the entire app **and the multiplayer server**. Upload the cont
 
 ## Online game rules
 
-Only the **room host** starts the match, controls the clock, adds time and advances rounds. After both players join, each submits one new prompt for round 1; one is randomly chosen. This repeats before every later round. Each person sees only their own canvas and tools during online drawing, with both artworks shown during voting. When the timer ends or the host finishes the round, each player votes once for Player 1, Player 2, or a tie. If both agree, the chosen player wins; if the votes differ, the result is a tie. The final scoreboard appears after the chosen number of rounds.
+Only the **room host** starts the match, controls the clock, adds time and advances rounds. After both players join, each submits one new prompt for round 1. The server swaps them so each artist draws the other artist's challenge. Both prompts must be different. This repeats before every later round. Each person sees only their own canvas and tools during online drawing, with both artworks shown during voting. When the timer ends or the host finishes the round, each player votes once for Player 1, Player 2, or a tie. If both agree, the chosen player wins; if the votes differ, the result is a tie. The final scoreboard appears after the chosen number of rounds.
 
 ## Files
 
@@ -55,6 +55,6 @@ Only the **room host** starts the match, controls the clock, adds time and advan
 
 No registration, lobby chat, or public matchmaking. Rooms are private-by-code and temporary. This version is intended for casual two-player games, not a production account system.
 
-## Latest update — fresh prompts every round
+## Latest update — individual challenges and canvas zoom
 
-In both local and online modes, creating or joining a match does not require a prompt. After the match starts and **before every round**, each player types one new prompt. The game randomly selects one shared challenge for both players to draw that round. Each online player sees only their own canvas while drawing; both artworks appear during voting. The drawing tools, colors, and brush-size control stay next to the canvas.
+In local and online modes, the menu has no prompt fields. After the match begins and **before every round**, each player submits exactly one new prompt. The challenges are swapped: Player 1 draws Player 2's prompt, and Player 2 draws Player 1's prompt. Each player sees their assigned prompt while drawing; both prompts are displayed beside the art during voting. During online drawing, each artist sees only their own canvas. The zoom controls next to each canvas support 100–400% viewing without changing the drawing or exported image. Press **Pan** then drag (also available with **Shift+drag** on desktop), or use Alt+mouse wheel to zoom. All drawing tools remain beside the canvas.
