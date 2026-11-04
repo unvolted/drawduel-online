@@ -6,7 +6,8 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const PORT = Number(process.env.PORT || 3000);
-const CLIENT = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
+const CLIENT = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8')
+  .replace("$('[data-vote]').forEach(b=>b.disabled=s.voted);", () => "$$('[data-vote]').forEach(b=>b.disabled=s.voted);");
 const rooms = new Map();
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const PROMPTS = require('./public/prompts.json');
