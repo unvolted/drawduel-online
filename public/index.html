@@ -304,7 +304,7 @@
       .game #newPromptBtn { grid-row:2; grid-column:3/span 2; }
       .game #exitBtn { grid-row:2; grid-column:5/span 2; }
     }
-  </style>
+  #newPromptBtn { display:none !important; }\n  </style>
 </head>
 <body>
   <svg style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -350,7 +350,7 @@
         </div>
       </div>
       <form class="setup-card" id="setupForm">
-        <div class="card-top"><div><div class="eyebrow">Your battle arena</div><h2>Set up your clash</h2><p>Customize your showdown, then go create.</p></div><div class="corner-spark">⚡</div></div>
+        <div class="card-top"><div><div class="eyebrow">Your battle arena</div><h2>Set up your clash</h2><p>Write one drawing prompt before the battle begins.</p></div><div class="corner-spark">⚡</div></div>
         <div class="two-col">
           <div class="field"><label for="name0"><span class="player-label"><span class="player-dot"></span> Player 1</span></label><input id="name0" maxlength="20" value="Player 1" autocomplete="off" required></div>
           <div class="field"><label for="name1"><span class="player-label"><span class="player-dot two"></span> Player 2</span></label><input id="name1" maxlength="20" value="Player 2" autocomplete="off" required></div>
@@ -359,8 +359,8 @@
           <div class="field"><label for="duration">Round timer</label><select id="duration"><option value="45">45 seconds — Speedrun</option><option value="60">60 seconds — Fast</option><option value="90" selected>90 seconds — Classic</option><option value="120">2 minutes</option><option value="180">3 minutes</option><option value="300">5 minutes — Chill</option></select></div>
           <div class="field"><label for="rounds">Number of rounds (same prompt)</label><select id="rounds"><option value="1" selected>1 round — Quick duel</option><option value="3">3 rounds — Best of 3</option><option value="5">5 rounds — Showdown</option><option value="7">7 rounds — Marathon</option><option value="10">10 rounds — Legend</option></select></div>
         </div>
-        <div class="field"><label for="category">Prompt category</label><select id="category"><option value="all">🎲 Everything (surprise me)</option><option value="silly">🤪 Silly & random</option><option value="animals">🐻 Animals</option><option value="food">🍕 Food & drinks</option><option value="fantasy">🐉 Fantasy & sci-fi</option><option value="objects">🛹 Everyday stuff</option><option value="places">🌎 Places & adventures</option></select></div>
-        <div class="field"><label for="customPrompt">ONE drawing prompt for BOTH players <span style="font-weight:500;color:#9b9eaf">(optional)</span></label><input id="customPrompt" maxlength="90" placeholder="e.g. A dinosaur playing basketball" autocomplete="off"><div class="small-caption">Type just one prompt. Both artists use it for the entire match—even if you select multiple rounds. Leave blank for one random prompt.</div></div>
+        
+        <div class="field"><label for="customPrompt">Write ONE drawing prompt <span style="color:var(--pink)">(required)</span></label><input id="customPrompt" maxlength="90" placeholder="e.g. A dinosaur playing basketball" autocomplete="off" required><div class="small-caption">Local: both artists draw this prompt. Online: each person writes ONE prompt before joining; the game selects ONE of them for both artists to draw for the entire match.</div></div>
         <button id="localStartBtn" type="button" class="primary full">START LOCAL BATTLE <svg class="ic"><use href="#ic-play"/></svg></button>
         <button type="button" id="createOnlineBtn" class="online-cta full">🌐 CREATE ONLINE ROOM <span>→</span></button>
         <div class="join-divider"><span>OR JOIN A FRIEND</span></div>
@@ -368,6 +368,7 @@
           <div class="field"><label for="joinName">Your name</label><input id="joinName" maxlength="20" value="Player 2" autocomplete="nickname"></div>
           <div class="field"><label for="joinCode">Room code</label><input id="joinCode" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input"></div>
         </div>
+        <div class="field"><label for="joinPrompt">Your ONE drawing prompt <span style="color:var(--pink)">(required)</span></label><input id="joinPrompt" maxlength="90" placeholder="e.g. A robot riding a skateboard" autocomplete="off"><div class="small-caption">You only type one. It will be entered into the shared challenge selection when you join.</div></div>
         <button type="button" id="joinOnlineBtn" class="secondary full join-button">JOIN ONLINE BATTLE →</button>
         <div class="network-notice" id="networkNotice" aria-live="polite">Online play uses room codes. No accounts needed.</div>
         <button type="button" class="resume" id="resumeBtn" hidden>↻ Resume your saved battle</button>
@@ -383,7 +384,7 @@
         <div class="room-code" id="waitingCode">------</div>
         <div class="waiting-actions"><button class="primary" id="copyInviteBtn">📋 Copy invite link</button><button class="secondary" id="copyCodeBtn">Copy code</button></div>
         <div class="waiting-players"><div id="waitingPlayer0" class="waiting-player">⏳ Player 1</div><div id="waitingPlayer1" class="waiting-player">⏳ Waiting for friend...</div></div>
-        <p class="waiting-hint" id="waitingHint">Waiting for another artist to join...</p>
+        <p class="waiting-hint" id="waitingHint">Each player submits one prompt. Once both have joined, one prompt will be selected for both artists.</p>
         <button class="primary full" id="beginOnlineBtn" disabled>START ONLINE BATTLE →</button>
         <button class="secondary full" id="leaveWaitingBtn" style="margin-top:12px">Leave room</button>
       </div>
@@ -391,7 +392,7 @@
 
     <section id="battle" class="screen game" hidden aria-label="Drawing battle">
       <div class="room-banner" id="roomBanner" hidden><span id="roomBannerText">🌐 ONLINE DUEL</span><span><button id="roomCopyBtn" class="mini">📋 Copy invite</button></span></div>
-      <div class="battle-head"><div class="round-detail"><span class="round-pill" id="roundPill">ROUND 1 / 3</span><span class="prompt-head" id="categoryLabel">QUICK DOODLE</span></div><div class="prompt-group"><div class="prompt-head">ONE PROMPT · BOTH ARTISTS · ENTIRE MATCH</div><div class="prompt" id="promptDisplay">A dog wearing sunglasses</div></div><div class="timer-col"><div class="timer-display" id="timerDisplay" aria-live="off">01:30</div><div class="timer-label" id="timerCaption">Ready when you are</div></div></div>
+      <div class="battle-head"><div class="round-detail"><span class="round-pill" id="roundPill">ROUND 1 / 1</span><span class="prompt-head" id="categoryLabel">QUICK DOODLE</span></div><div class="prompt-group"><div class="prompt-head">ONE PROMPT · BOTH ARTISTS · ENTIRE MATCH</div><div class="prompt" id="promptDisplay">A dog wearing sunglasses</div></div><div class="timer-col"><div class="timer-display" id="timerDisplay" aria-live="off">01:30</div><div class="timer-label" id="timerCaption">Ready when you are</div></div></div>
       <div class="time-track"><div class="time-fill" id="timeFill"></div></div>
       <div class="battle-actions"><div class="left"><button class="primary small-primary" id="startPauseBtn"><svg class="ic"><use href="#ic-play"/></svg><span>Start drawing</span></button><button class="secondary" id="extraBtn">+ 15 seconds</button><button class="secondary" id="newPromptBtn" title="Change the battle prompt before round 1 starts"><svg class="ic"><use href="#ic-spark"/></svg>Reroll prompt</button></div><div class="right"><button class="secondary warn" id="judgeBtn">Finish & vote →</button><button class="secondary" id="exitBtn">Leave battle</button></div></div>
       <div class="boards" id="boards">
@@ -409,7 +410,7 @@
 
     <footer class="footer-note">✳ DRAWDUEL — Art battles with friends. Local mode works offline; online mode requires the game server.</footer>
   </div>
-  <dialog id="helpDialog"><h2>🎨 How to play</h2><p><strong>1.</strong> Enter two names, choose a time, rounds and a prompt category.<br><strong>2.</strong> Hit <strong>Start drawing</strong>. Both players draw the same challenge on separate canvases until time runs out.<br><strong>3.</strong> Compare the artwork and vote. Most points after the final round wins!</p><p><strong>Your drawing toolkit:</strong> Pencil, marker, spray, eraser, paint bucket, line, rectangle, ellipse, color picker and text. Each player gets their own colors, sizes, undo/redo, grid, filled-shape toggle and PNG download.</p><p><strong>Shortcuts:</strong> Click a canvas to make it active, then press B (brush), M (marker), S (spray), E (eraser), G (fill), L (line), R (rectangle), O (ellipse), I (eyedropper), T (text). Ctrl/Cmd + Z to undo, Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z to redo. [ and ] change size.</p><p class="small-caption">Choose Start Local Battle for two artists on one device, or Create Online Room to invite a friend on another device. The room host controls the clock and next rounds. Both online players vote; agreement picks a winner, otherwise it is a tie. Online rooms are temporary, so save art as PNG before leaving.</p><div class="dialog-actions"><button class="primary small-primary" id="helpCloseBtn">Got it!</button></div></dialog>
+  <dialog id="helpDialog"><h2>🎨 How to play</h2><p><strong>1.</strong> Write ONE drawing prompt before starting. For online battles, each player writes one; one is selected for both to draw.<br><strong>2.</strong> Hit <strong>Start drawing</strong>. Both players draw the same challenge on separate canvases until time runs out.<br><strong>3.</strong> Compare the artwork and vote. Most points after the final round wins!</p><p><strong>Your drawing toolkit:</strong> Pencil, marker, spray, eraser, paint bucket, line, rectangle, ellipse, color picker and text. Each player gets their own colors, sizes, undo/redo, grid, filled-shape toggle and PNG download.</p><p><strong>Shortcuts:</strong> Click a canvas to make it active, then press B (brush), M (marker), S (spray), E (eraser), G (fill), L (line), R (rectangle), O (ellipse), I (eyedropper), T (text). Ctrl/Cmd + Z to undo, Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z to redo. [ and ] change size.</p><p class="small-caption">Choose Start Local Battle for two artists on one device, or Create Online Room to invite a friend on another device. The room host controls the clock and next rounds. Both online players vote; agreement picks a winner, otherwise it is a tie. Online rooms are temporary, so save art as PNG before leaving.</p><div class="dialog-actions"><button class="primary small-primary" id="helpCloseBtn">Got it!</button></div></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (() => {
@@ -417,7 +418,7 @@
       const $ = (q, root=document) => root.querySelector(q);
       const $$ = (q, root=document) => [...root.querySelectorAll(q)];
       const STORE = 'drawduel-v1-save';
-      const PREFS = 'drawduel-oneprompt-v3-prefs';
+      const PREFS = 'drawingduel-oneprompt-v4-prefs';
       const COLORS = ['#24243a','#f35373','#ff9838','#ffdf53','#50c878','#47b4ee','#9362ed','#ffffff'];
       const TOOLS = [
         ['pen','Pencil','ic-pen','B'],['marker','Marker','ic-marker','M'],['spray','Spray','ic-spray','S'],['eraser','Eraser','ic-eraser','E'],
@@ -445,7 +446,7 @@
       function updateSound() { $('#soundBtn').innerHTML=icon(state.sound?'ic-sound':'ic-muted'); $('#soundBtn').setAttribute('aria-label',state.sound?'Mute sounds':'Unmute sounds'); $('#soundBtn').title=state.sound?'Mute sounds':'Unmute sounds'; }
       function rand(n) {return Math.floor(Math.random()*n);}
       function choosePrompt() { let pool=state.settings.category==='all'?Object.values(PROMPTS).flat():PROMPTS[state.settings.category]; let available=pool.filter(p=>!state.used.includes(p)); if(!available.length) { state.used=[]; available=pool; } const prompt=available[rand(available.length)]; state.used.push(prompt); return prompt; }
-      function getSettings(){return {names:[safeText($('#name0').value)||'Player 1',safeText($('#name1').value)||'Player 2'],duration:Number($('#duration').value),rounds:Number($('#rounds').value),category:$('#category').value,custom:safeText($('#customPrompt').value,90)};}
+      function getSettings(){return {names:[safeText($('#name0').value)||'Player 1',safeText($('#name1').value)||'Player 2'],duration:Number($('#duration').value),rounds:Number($('#rounds').value),category:'all',custom:safeText($('#customPrompt').value,90)};}
       function renderScores() {boards.forEach((b,i)=>{ $('.name-text',b.root).textContent=state.settings.names[i]; $('.score-pill',b.root).textContent=`${state.scores[i]} ${state.scores[i]===1?'PT':'PTS'}`; b.canvas.setAttribute('aria-label',`${state.settings.names[i]} drawing canvas`);});}
       function startGame(settings=getSettings()) { stopClock(); state.settings=settings; state.round=1; state.scores=[0,0]; state.used=[]; state.gallery=[]; state.prompt=settings.custom||choosePrompt(); state.remaining=settings.duration; state.mode='ready'; state.active=0; $('#boards').classList.remove('mine-second');boards.forEach(b=>b.reset()); renderBattle(); setStage('battle'); saveSoon(); try{localStorage.setItem(PREFS,JSON.stringify(settings));}catch(e){} }
       function renderBattle() { $('#roundPill').textContent=`ROUND ${state.round} / ${state.settings.rounds}`; $('#categoryLabel').textContent=state.settings.custom?'YOUR CHALLENGE':(CATEGORY_LABELS[state.settings.category]||'MYSTERY'); $('#promptDisplay').textContent=state.prompt; renderScores(); renderTimer(); renderMode(); }
@@ -456,7 +457,7 @@
         $('#startPauseBtn').disabled=Boolean(online && online.seat!==0);
         $('#extraBtn').disabled=Boolean(online && online.seat!==0);
         $('#judgeBtn').disabled=Boolean(online && online.seat!==0);
-        $('#newPromptBtn').disabled=state.mode!=='ready'||state.round!==1||Boolean(online && online.seat!==0);
+        $('#newPromptBtn').disabled=true; $('#newPromptBtn').hidden=true;
         $('#timerCaption').textContent=state.mode==='ready'?'Ready when you are':state.mode==='paused'?'Clock paused':'TIME REMAINING';
         boards.forEach(b=>{const cover=$('.canvas-cover',b.root); cover.hidden=state.mode==='drawing';
           if(state.mode==='paused') cover.innerHTML='<div class="cover-inner"><strong>Paused ⏸</strong><small>Resume the clock to keep drawing.</small></div>';
@@ -526,13 +527,15 @@
         $('#rematchBtn').disabled=false;$('#nextRoundBtn').disabled=false;$$('[data-vote]').forEach(b=>b.disabled=false);setStage('lobby');notify('Left online room.');}
       async function connectOnline(mode){
         if(location.protocol!=='http:'&&location.protocol!=='https:'){notify('For online play, start the Node server and open its website address.');return;}
+        if(mode==='create'&&!safeText($('#customPrompt').value,90)){notify('Enter one drawing prompt before creating a room.');$('#customPrompt').focus();return;}
+        if(mode==='join'&&!safeText($('#joinPrompt').value,90)&&!localStorage.getItem('drawduel-token-'+safeText($('#joinCode').value,6).toUpperCase())){notify('Enter your one drawing prompt before joining.');$('#joinPrompt').focus();return;}
         const button=$(mode==='create'?'#createOnlineBtn':'#joinOnlineBtn');if(button.disabled)return;
         button.disabled=true;
         try{
           if(online)leaveOnline();
           const data=mode==='create'
             ? await request('create',{name:safeText($('#name0').value)||'Player 1',settings:getSettings()})
-            : await request('join',{code:safeText($('#joinCode').value,6).toUpperCase(),name:safeText($('#joinName').value)||'Player 2',token:localStorage.getItem('drawduel-token-'+safeText($('#joinCode').value,6).toUpperCase())||''});
+            : await request('join',{code:safeText($('#joinCode').value,6).toUpperCase(),name:safeText($('#joinName').value)||'Player 2',prompt:safeText($('#joinPrompt').value,90),token:localStorage.getItem('drawduel-token-'+safeText($('#joinCode').value,6).toUpperCase())||''});
           online={...data,source:null,lastStage:null,lastRound:0,receivedArt:[0,0],artBusy:false,artPending:false};
           try{localStorage.setItem('drawduel-token-'+online.code,online.token);}catch(e){}
           $('#waitingCode').textContent=online.code;setStage('waiting');
@@ -570,11 +573,11 @@
         state.mode=s.mode;state.remaining=(s.mode==='drawing'?Math.max(0,s.endAt-Date.now()):s.remainingMs)/1000;
         if(s.stage==='waiting'){
           $('#waitingCode').textContent=s.code;
-          s.players.forEach((p,i)=>{const el=$('#waitingPlayer'+i);el.textContent=p?(p.online?'🟢 ':'⚪ ')+p.name:'⏳ Waiting for friend...';el.classList.toggle('online',Boolean(p?.online));});
-          const ready=s.players.every(p=>p?.online);
+          s.players.forEach((p,i)=>{const el=$('#waitingPlayer'+i);el.textContent=p?(p.online?'🟢 ':'⚪ ')+p.name+(s.promptsReady?.[i]?' · ✓ prompt entered':' · prompt needed'):'⏳ Waiting for friend...';el.classList.toggle('online',Boolean(p?.online));});
+          const ready=s.players.every(p=>p?.online)&&s.promptsReady?.every(Boolean);
           $('#beginOnlineBtn').disabled=online.seat!==0||!ready;
           $('#beginOnlineBtn').textContent=online.seat===0?'START ONLINE BATTLE →':'WAITING FOR HOST TO START';
-          $('#waitingHint').textContent=ready?(online.seat===0?'Both artists are here! Start the battle.':'Both artists joined! Waiting for the host to start.'):'Waiting for both artists to connect...';
+          $('#waitingHint').textContent=ready?(online.seat===0?'Both artists submitted one prompt! Start to reveal one shared challenge.':'Both prompts received! Waiting for the host to start.'):'Each artist must enter ONE prompt before the match starts.';
           setStage('waiting');
         }else if(s.stage==='battle'){
           const reset=previousRound!==s.round||previousStage!=='battle';
@@ -619,7 +622,7 @@
       $('#leaveWaitingBtn').addEventListener('click',leaveOnline);
       const initialCode=new URLSearchParams(location.search).get('room');
       if(initialCode){$('#joinCode').value=initialCode.trim().slice(0,6).toUpperCase();$('#joinCode').scrollIntoView({block:'center'});}
-      function launchLocalBattle(){const settings=getSettings();if(settings.names[0].toLowerCase()===settings.names[1].toLowerCase()){notify('Give your players different names!');return;}try{if(online)leaveOnline();startGame(settings);}catch(error){console.error('Local start error',error);notify('Could not start: '+error.message);}}
+      function launchLocalBattle(){const settings=getSettings();if(!settings.custom){notify('Write one drawing prompt before starting the battle.');$('#customPrompt').focus();return;}if(settings.names[0].toLowerCase()===settings.names[1].toLowerCase()){notify('Give your players different names!');return;}try{if(online)leaveOnline();startGame(settings);}catch(error){console.error('Local start error',error);notify('Could not start: '+error.message);}}
       $('#setupForm').addEventListener('submit',e=>{e.preventDefault();launchLocalBattle();});
       $('#localStartBtn').addEventListener('click',launchLocalBattle);
       $('#resumeBtn').addEventListener('click',resume);
@@ -638,7 +641,7 @@
       $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;updateSound();try{localStorage.setItem('drawduel-sound',state.sound?'1':'0');}catch(e){}});
       $('#brandLink').addEventListener('click',e=>{e.preventDefault();if(state.stage!=='lobby'&&!confirm(online?'Leave this online room?':'Go back to the lobby? Your active round will be saved.'))return;if(online){leaveOnline();return;}if(state.stage==='battle'){pauseClock();saveSoon();}setStage('lobby');updateResume();});
       document.addEventListener('keydown',e=>{if(state.stage!=='battle'||state.mode!=='drawing')return;if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)||$('#helpDialog').open)return;const b=boards[online?online.seat:state.active];if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();if(e.shiftKey)b.redo();else b.undo();return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();b.redo();return;}if(e.ctrlKey||e.metaKey||e.altKey)return;const shortcut={b:'pen',m:'marker',s:'spray',e:'eraser',g:'fill',l:'line',r:'rect',o:'ellipse',i:'picker',t:'text'}[e.key.toLowerCase()];if(shortcut){b.chooseTool(shortcut);return;}if(e.key==='['){b.setSize(b.size-2);}if(e.key===']'){b.setSize(b.size+2);}});
-      try{const sound=localStorage.getItem('drawduel-sound');if(sound!==null)state.sound=sound==='1';const prefs=JSON.parse(localStorage.getItem(PREFS));if(prefs){$('#name0').value=prefs.names?.[0]||'Player 1';$('#name1').value=prefs.names?.[1]||'Player 2';$('#duration').value=prefs.duration||90;$('#rounds').value=prefs.rounds||1;$('#category').value=prefs.category||'all';}}catch(e){}
+      try{const sound=localStorage.getItem('drawduel-sound');if(sound!==null)state.sound=sound==='1';const prefs=JSON.parse(localStorage.getItem(PREFS));if(prefs){$('#name0').value=prefs.names?.[0]||'Player 1';$('#name1').value=prefs.names?.[1]||'Player 2';$('#duration').value=prefs.duration||90;$('#rounds').value=prefs.rounds||1;}}catch(e){}
       updateSound();updateResume();
     })();
   </script>
