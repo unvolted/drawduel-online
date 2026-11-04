@@ -305,6 +305,23 @@
       .game #exitBtn { grid-row:2; grid-column:5/span 2; }
     }
   #newPromptBtn { display:none !important; }
+    /* Online: each artist sees only their own drawing canvas and tools.
+       The second artwork stays hidden until the voting screen. */
+    .game .boards.online-solo {
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) !important;
+      max-width:1150px;
+      width:100%;
+      margin-inline:auto;
+    }
+    .game .boards.online-solo .player-board:not(.online-mine) {
+      display:none !important;
+    }
+    .game .boards.online-solo .player-board.online-mine {
+      display:grid !important;
+      width:100%;
+      min-width:0;
+    }
   </style>
 </head>
 <body>
@@ -449,7 +466,7 @@
       function choosePrompt() { let pool=state.settings.category==='all'?Object.values(PROMPTS).flat():PROMPTS[state.settings.category]; let available=pool.filter(p=>!state.used.includes(p)); if(!available.length) { state.used=[]; available=pool; } const prompt=available[rand(available.length)]; state.used.push(prompt); return prompt; }
       function getSettings(){return {names:[safeText($('#name0').value)||'Player 1',safeText($('#name1').value)||'Player 2'],duration:Number($('#duration').value),rounds:Number($('#rounds').value),category:'all',custom:safeText($('#customPrompt').value,90)};}
       function renderScores() {boards.forEach((b,i)=>{ $('.name-text',b.root).textContent=state.settings.names[i]; $('.score-pill',b.root).textContent=`${state.scores[i]} ${state.scores[i]===1?'PT':'PTS'}`; b.canvas.setAttribute('aria-label',`${state.settings.names[i]} drawing canvas`);});}
-      function startGame(settings=getSettings()) { stopClock(); state.settings=settings; state.round=1; state.scores=[0,0]; state.used=[]; state.gallery=[]; state.prompt=settings.custom||choosePrompt(); state.remaining=settings.duration; state.mode='ready'; state.active=0; $('#boards').classList.remove('mine-second');boards.forEach(b=>b.reset()); renderBattle(); setStage('battle'); saveSoon(); try{localStorage.setItem(PREFS,JSON.stringify(settings));}catch(e){} }
+      function startGame(settings=getSettings()) { stopClock(); state.settings=settings; state.round=1; state.scores=[0,0]; state.used=[]; state.gallery=[]; state.prompt=settings.custom||choosePrompt(); state.remaining=settings.duration; state.mode='ready'; state.active=0; $('#boards').classList.remove('mine-second','online-solo','focused');boards.forEach(b=>{b.root.classList.remove('online-mine','online-locked','in-focus');b.reset();}); renderBattle(); setStage('battle'); saveSoon(); try{localStorage.setItem(PREFS,JSON.stringify(settings));}catch(e){} }
       function renderBattle() { $('#roundPill').textContent=`ROUND ${state.round} / ${state.settings.rounds}`; $('#categoryLabel').textContent=state.settings.custom?'YOUR CHALLENGE':(CATEGORY_LABELS[state.settings.category]||'MYSTERY'); $('#promptDisplay').textContent=state.prompt; renderScores(); renderTimer(); renderMode(); }
       function renderTimer(){ const secs=Math.max(0,Math.ceil(state.remaining)); $('#timerDisplay').textContent=`${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`; $('#timerDisplay').classList.toggle('urgent',secs<=10&&state.mode==='drawing'); const pct=Math.min(100,(state.remaining/state.settings.duration)*100); $('#timeFill').style.width=`${pct}%`; $('#timeFill').classList.toggle('urgent',secs<=10); }
       function renderMode(){ let label=state.mode==='drawing'?'Pause clock':state.mode==='paused'?'Resume clock':'Start drawing';
@@ -523,7 +540,7 @@
         if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>notify(what==='code'?'Room code copied!':'Invite link copied!')).catch(()=>fallbackCopy(text));}
         else fallbackCopy(text); }
       function leaveOnline(){if(!online)return;clearTimeout(onlineArtTimer);if(onlineClockTimer)clearInterval(onlineClockTimer);onlineClockTimer=null;
-        const previous=online;online=null;previous.source?.close();$('#roomBanner').hidden=true;$('#boards').classList.remove('mine-second');$('#voteRules').textContent='Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.';
+        const previous=online;online=null;previous.source?.close();$('#roomBanner').hidden=true;$('#boards').classList.remove('mine-second','online-solo','focused');boards.forEach(b=>b.root.classList.remove('in-focus'));$('#voteRules').textContent='Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.';
         boards.forEach(b=>b.root.classList.remove('online-locked','online-mine'));$$('[data-vote]').forEach(b=>b.disabled=false);
         $('#rematchBtn').disabled=false;$('#nextRoundBtn').disabled=false;$$('[data-vote]').forEach(b=>b.disabled=false);setStage('lobby');notify('Left online room.');}
       async function connectOnline(mode){
@@ -573,6 +590,7 @@
         state.settings=s.settings;state.round=s.round;state.prompt=s.prompt;state.scores=s.scores;state.gallery=s.gallery;
         state.mode=s.mode;state.remaining=(s.mode==='drawing'?Math.max(0,s.endAt-Date.now()):s.remainingMs)/1000;
         if(s.stage==='waiting'){
+          $('#boards').classList.remove('online-solo','focused');
           $('#waitingCode').textContent=s.code;
           s.players.forEach((p,i)=>{const el=$('#waitingPlayer'+i);el.textContent=p?(p.online?'🟢 ':'⚪ ')+p.name+(s.promptsReady?.[i]?' · ✓ prompt entered':' · prompt needed'):'⏳ Waiting for friend...';el.classList.toggle('online',Boolean(p?.online));});
           const ready=s.players.every(p=>p?.online)&&s.promptsReady?.every(Boolean);
@@ -586,7 +604,7 @@
           state.active=online.seat;
           $('#roomBanner').hidden=false;
           $('#roomBannerText').textContent=`🌐 ROOM ${online.code} · YOU ARE ${s.settings.names[online.seat]} · ${s.players.filter(p=>p?.online).length}/2 CONNECTED`;
-          $('#boards').classList.toggle('mine-second',online.seat===1);boards.forEach((b,i)=>{b.root.classList.toggle('online-mine',online.seat===i);b.root.classList.toggle('online-locked',online.seat!==i);});
+          $('#boards').classList.remove('focused');$('#boards').classList.add('online-solo');$('#boards').classList.toggle('mine-second',online.seat===1);boards.forEach((b,i)=>{b.root.classList.remove('in-focus');b.root.classList.toggle('online-mine',online.seat===i);b.root.classList.toggle('online-locked',online.seat!==i);});
           renderBattle();setStage('battle');
           if(!onlineClockTimer)onlineClockTimer=setInterval(()=>{if(!online||state.stage!=='battle'||state.mode!=='drawing')return;state.remaining=Math.max(0,(online.endAt-Date.now())/1000);renderTimer();},100);
           online.endAt=s.endAt;
