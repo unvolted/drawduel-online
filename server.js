@@ -40,8 +40,10 @@ function event(res, kind, data) { if (!res.destroyed && !res.writableEnded) res.
 function stateFor(room, seat) {
   return { code:room.code, seat, host:seat === 0, stage:room.stage, mode:room.mode,
     players:room.players.map(p => p ? { name:p.name, online:connected(p) } : null),
-    settings: { ...room.settings, custom:['waiting','prompts'].includes(room.stage)?'':room.settings.custom, names: room.players.map((p,i) => p?.name || `Player ${i+1}`) },
-    round:room.round, prompt:room.prompt, promptsReady:room.prompts.map(Boolean), remainingMs:room.remainingMs, endAt:room.endAt,
+    settings: { ...room.settings, custom:'', names: room.players.map((p,i) => p?.name || `Player ${i+1}`) },
+    round:room.round, prompt:room.drawPrompts?.[seat] || '', promptsReady:room.prompts.map(Boolean),
+    drawPrompts:['vote','result','final'].includes(room.stage)?room.drawPrompts:null,
+    remainingMs:room.remainingMs, endAt:room.endAt,
     scores:room.scores, art:room.art, winner:room.winner, gallery:room.gallery,
     voted:seat >= 0 && Object.hasOwn(room.votes, seat), votesCast:Object.keys(room.votes).length };
 }
@@ -66,7 +68,7 @@ function expireClock(room) {
   }
 }
 function preparePromptRound(room) {
-  room.stage='prompts'; room.mode='ready'; room.prompts=[null,null]; room.prompt='';
+  room.stage='prompts'; room.mode='ready'; room.prompts=[null,null]; room.drawPrompts=[null,null]; room.prompt='';
   room.settings.custom=''; room.art=[null,null]; room.votes={}; room.winner=null;
   room.remainingMs=room.settings.duration*1000; room.endAt=0;
 }
@@ -88,10 +90,12 @@ function handleAction(room, seat, body, res) {
     if (room.prompts[seat]) return fail(res,409,'You already submitted your one prompt for this round.');
     const submission=trim(body.prompt,90);
     if (!submission) return fail(res,400,'Enter one drawing prompt to continue.');
+    if (room.prompts.some(p=>p && p.toLocaleLowerCase() === submission.toLocaleLowerCase()))
+      return fail(res,409,'That prompt is already submitted. Write a different one so both artists have unique challenges.');
     room.prompts[seat]=submission;
     if (room.prompts.every(Boolean)) {
-      room.prompt=room.prompts[crypto.randomInt(2)];
-      room.settings.custom=room.prompt;
+      // Each artist draws the prompt written by the OTHER artist.
+      room.drawPrompts=[room.prompts[1],room.prompts[0]];
       room.stage='battle';
       room.mode='ready';
     }
@@ -120,7 +124,7 @@ function handleAction(room, seat, body, res) {
       room.winner=v0===v1?v0:'tie';
       if (room.winner === 'tie') { room.scores[0]++; room.scores[1]++; }
       else room.scores[room.winner]++;
-      room.gallery.push({round:room.round,prompt:room.prompt,winner:room.winner,art:room.art.slice()});
+      room.gallery.push({round:room.round,prompts:room.drawPrompts.slice(),winner:room.winner,art:room.art.slice()});
       room.stage='result'; room.votes={};
     }
   } else if (a === 'next') {
