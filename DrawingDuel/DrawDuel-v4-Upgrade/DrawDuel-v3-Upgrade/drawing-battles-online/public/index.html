@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10101a">
+  <meta name="description" content="Draw Duel: a fast, creative, multiplayer drawing battle game with timers, fun prompts, art tools and voting.">
+  <title>Draw Duel — The ultimate drawing showdown</title>
+  <style>
+    :root { --bg:#0e0f19; --panel:#191b29; --panel2:#222435; --border:#33364c; --muted:#a2a6ba; --ink:#f8f8ff; --lime:#d8ff64; --purple:#ac8fff; --pink:#ff7695; --cyan:#77dcef; --shadow:0 18px 50px rgba(0,0,0,.22); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:radial-gradient(ellipse at 20% -15%, #292548 0%, transparent 42%),radial-gradient(ellipse at 90% 80%, #1d2633 0%, transparent 33%),var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; min-height:100vh; }
+    button,input,select { font:inherit; }
+    button { cursor:pointer; }
+    button:disabled { cursor:not-allowed; opacity:.45; }
+    button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid var(--cyan); outline-offset:3px; }
+    [hidden] { display:none !important; }
+    .wrap { max-width:1520px; margin:auto; padding:0 30px; }
+    .site-header { height:81px; border-bottom:1px solid #282a3a; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:1000; font-size:23px; letter-spacing:-1.3px; color:#fff; text-decoration:none; white-space:nowrap; }
+    .brand-mark { width:36px; height:36px; display:grid; place-items:center; color:#12131c; background:var(--lime); border-radius:12px; transform:rotate(-9deg); box-shadow:4px 4px 0 #5d693a; }
+    .brand-mark svg { width:22px; height:22px; transform:rotate(9deg); }
+    .brand span span { color:var(--lime); }
+    .site-nav { display:flex; align-items:center; gap:18px; }
+    .header-note { font-size:12px; color:var(--muted); font-weight:750; letter-spacing:.12em; }
+    .icon-btn { border:1px solid var(--border); border-radius:12px; padding:9px 11px; background:#252739; color:#fff; display:inline-flex; align-items:center; gap:7px; justify-content:center; min-height:39px; }
+    .icon-btn:hover { background:#35364b; }
+    svg.ic { width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+    .eyebrow { color:var(--lime); font-size:12px; font-weight:900; letter-spacing:.19em; text-transform:uppercase; }
+    .lobby { min-height:calc(100vh - 81px); display:grid; grid-template-columns:minmax(0,1.12fr) minmax(350px,.88fr); gap:clamp(40px,6vw,110px); align-items:center; padding:68px 0 80px; }
+    .hero-copy h1 { font-size:clamp(58px,7.2vw,108px); font-weight:1000; text-transform:uppercase; line-height:.93; letter-spacing:-.085em; margin:19px 0 26px; max-width:760px; }
+    .hero-copy h1 .highlight { display:block; color:var(--lime); transform:rotate(-2deg); transform-origin:left center; }
+    .hero-copy .lead { font-size:clamp(17px,1.5vw,21px); color:#c3c5d2; line-height:1.65; max-width:510px; }
+    .hero-tags { display:flex; gap:11px; flex-wrap:wrap; margin-top:32px; }
+    .tag { border:1px solid #3b3d51; border-radius:999px; padding:10px 14px; display:inline-flex; align-items:center; gap:7px; background:rgba(28,30,45,.8); color:#ddddeb; font-size:13px; font-weight:750; }
+    .tag strong { color:var(--lime); }
+    .hero-art { margin-top:45px; display:flex; align-items:center; height:205px; position:relative; max-width:550px; }
+    .doodle { position:absolute; border:7px solid #272837; border-radius:20px; width:202px; height:176px; display:grid; place-items:center; background:#f6f4ed; box-shadow:0 22px 32px #0004; }
+    .doodle svg { width:145px; height:145px; }
+    .doodle.one { transform:rotate(-12deg); left:10px; top:16px; }
+    .doodle.two { transform:rotate(8deg); left:215px; top:10px; }
+    .versus { position:absolute; z-index:2; left:181px; top:74px; background:var(--pink); color:#1d0e18; border-radius:14px; border:5px solid var(--bg); font-weight:1000; transform:rotate(-11deg); padding:10px; box-shadow:0 4px 0 #ac465d; }
+    .setup-card { border:1px solid #494958; border-radius:26px; background:linear-gradient(165deg,#25263a,#1a1c2b); padding:30px; box-shadow:var(--shadow); }
+    .card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:27px; }
+    .card-top h2 { font-size:28px; letter-spacing:-1px; margin:4px 0 4px; }
+    .card-top p { color:var(--muted); font-size:13px; margin:0; }
+    .corner-spark { font-size:32px; background:#4e3a6f; border-radius:12px; width:48px; height:48px; display:grid; place-items:center; transform:rotate(8deg); }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .field { display:flex; flex-direction:column; gap:9px; margin-bottom:18px; min-width:0; }
+    .field label { font-weight:800; font-size:13px; color:#e7e6f3; }
+    .field input,.field select { background:#11131f; color:#fbfaff; border:1px solid #48495b; border-radius:11px; height:48px; min-width:0; padding:0 13px; width:100%; outline:none; }
+    .field input:focus,.field select:focus { border-color:var(--lime); }
+    .player-label { display:inline-flex; align-items:center; gap:8px; }
+    .player-dot { width:9px; height:9px; background:var(--pink); border-radius:3px; display:inline-block; }
+    .player-dot.two { background:var(--purple); }
+    .small-caption { color:var(--muted); font-size:12px; line-height:1.5; }
+    .primary { border:0; background:var(--lime); color:#151822; border-radius:13px; min-height:52px; padding:12px 24px; font-weight:950; letter-spacing:.025em; transition:transform .12s ease,background .12s; display:inline-flex; align-items:center; justify-content:center; gap:10px; }
+    .primary:hover { background:#ebff9f; transform:translateY(-1px); }
+    .primary svg { width:19px; height:19px; }
+    .primary.full { width:100%; margin-top:5px; font-size:16px; min-height:58px; }
+    .subtle-link { border:none; background:transparent; color:#d2d0e9; font-weight:750; padding:8px; }
+    .subtle-link:hover { color:var(--lime); }
+    .resume { width:100%; margin-top:11px; border:1px solid #6a7450; background:#262d22; color:#e6ffb6; padding:13px; border-radius:10px; font-weight:800; }
+    .footer-note { color:#7f849d; text-align:center; font-size:12px; padding:24px 0 32px; }
+    .game { padding:29px 0 56px; }
+    .battle-head { display:grid; grid-template-columns:1fr minmax(270px,.9fr) 1fr; align-items:center; gap:15px; margin-bottom:19px; }
+    .round-detail { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .round-pill { background:#292b3e; border:1px solid #44465a; font-size:12px; font-weight:900; letter-spacing:.09em; padding:9px 13px; border-radius:9px; }
+    .prompt-head { color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    .prompt { font-size:clamp(17px,2.1vw,28px); font-weight:1000; letter-spacing:-.04em; color:#fff; text-align:center; line-height:1.15; margin:4px 0; }
+    .prompt:before,.prompt:after { content:'✦'; color:var(--lime); font-size:15px; vertical-align:middle; margin:0 10px; }
+    .prompt-group { text-align:center; }
+    .timer-col { justify-self:end; text-align:right; }
+    .timer-display { font-size:clamp(29px,4vw,49px); font-weight:1000; letter-spacing:-.06em; line-height:1; font-variant-numeric:tabular-nums; }
+    .timer-display.urgent { color:var(--pink); animation:beat .7s infinite alternate; }
+    @keyframes beat { from { opacity:1 } to { opacity:.66 } }
+    .timer-label { text-transform:uppercase; letter-spacing:.1em; font-size:10px; font-weight:800; color:var(--muted); margin-top:7px; }
+    .time-track { height:8px; width:100%; background:#373747; border-radius:99px; overflow:hidden; margin-bottom:19px; }
+    .time-fill { width:100%; background:linear-gradient(90deg,#b19dff,var(--lime)); height:100%; border-radius:99px; transition:width .25s linear; }
+    .time-fill.urgent { background:var(--pink); }
+    .battle-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+    .battle-actions .left,.battle-actions .right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .secondary { background:#27283b; border:1px solid #484a60; color:#eaeafa; border-radius:10px; padding:10px 13px; font-weight:800; font-size:12px; min-height:40px; display:inline-flex; gap:7px; align-items:center; }
+    .secondary:hover { background:#36384e; }
+    .secondary svg { width:16px; height:16px; }
+    .secondary.warn { border-color:#7b4756; color:#ffbdcc; }
+    .small-primary { min-height:41px; padding:10px 18px; font-size:13px; border-radius:10px; }
+    .boards { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:17px; }
+    .player-board { min-width:0; background:#1b1d2c; border:1px solid #36384d; border-radius:19px; overflow:hidden; box-shadow:0 16px 25px #0002; }
+    .player-board[data-player="0"] { --accent:var(--pink); }
+    .player-board[data-player="1"] { --accent:var(--purple); }
+    .board-heading { display:flex; justify-content:space-between; align-items:center; padding:14px 17px; gap:10px; }
+    .player-name { display:flex; gap:9px; align-items:center; min-width:0; font-weight:1000; font-size:17px; letter-spacing:-.035em; }
+    .player-name .name-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .player-badge { background:var(--accent); color:#18121b; width:29px; height:29px; display:grid; place-items:center; border-radius:9px; font-size:13px; flex:none; }
+    .score-pill { background:#2a2c3f; border-radius:8px; border:1px solid #414357; padding:7px 10px; font-size:12px; font-weight:900; white-space:nowrap; }
+    .board-heading-actions { display:flex; align-items:center; gap:10px; }
+    .focus-btn { border:0; background:none; color:#bbbfce; padding:6px; }
+    .focus-btn:hover { color:#fff; }
+    .canvas-frame { margin:0 13px; position:relative; border-radius:11px; overflow:hidden; background:white; border:3px solid #424253; }
+    .canvas-frame canvas { display:block; width:100%; height:auto; aspect-ratio:900 / 560; background:#fff; cursor:crosshair; touch-action:none; }
+    .grid-overlay { pointer-events:none; position:absolute; inset:0; background-image:linear-gradient(to right,rgba(60,65,80,.12) 1px,transparent 1px),linear-gradient(to bottom,rgba(60,65,80,.12) 1px,transparent 1px); background-size:25px 25px; }
+    .canvas-cover { position:absolute; inset:0; z-index:3; background:rgba(14,15,25,.68); color:white; display:grid; place-items:center; text-align:center; padding:16px; pointer-events:auto; backdrop-filter:blur(3px); }
+    .cover-inner { background:#202137ed; border:1px solid #535267; border-radius:16px; padding:17px 22px; max-width:270px; }
+    .cover-inner strong { display:block; font-size:22px; letter-spacing:-.05em; }
+    .cover-inner small { font-size:12px; color:#c7c7d8; display:block; margin-top:5px; line-height:1.5; }
+    .tool-wrap { padding:15px 13px; }
+    .tool-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+    .tool-header .tool-title { text-transform:uppercase; font-weight:900; font-size:10px; letter-spacing:.15em; color:#a7a9ba; }
+    .tool-name { color:var(--accent); font-weight:850; font-size:12px; }
+    .tool-row { display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
+    .tool-btn { width:36px; height:36px; border:1px solid #414456; border-radius:9px; background:#26283a; color:#d3d6e4; display:grid; place-items:center; padding:7px; }
+    .tool-btn:hover { background:#3c3e57; }
+    .tool-btn.active { background:var(--accent); color:#14131d; border-color:var(--accent); }
+    .tool-btn svg { width:18px; height:18px; }
+    .tool-separator { background:#414255; height:30px; width:1px; margin:0 4px; }
+    .color-tool-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    .palette { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+    .color-swatch { height:24px; width:24px; padding:0; border:2px solid #313243; border-radius:7px; background:var(--swatch); position:relative; }
+    .color-swatch.selected { outline:2px solid #fff; outline-offset:1px; }
+    .custom-color { width:29px; height:29px; background:transparent; border:1px dashed #76798c; border-radius:8px; padding:2px; cursor:pointer; }
+    .size-tools { display:flex; align-items:center; gap:8px; }
+    .size-tools label { color:#b7b9c9; font-size:11px; font-weight:800; white-space:nowrap; }
+    .size-tools input { width:90px; max-width:23vw; accent-color:var(--accent); }
+    .size-value { font-size:11px; font-weight:900; min-width:22px; text-align:right; color:#d7d8e7; }
+    .board-bottom { border-top:1px solid #383b50; margin:0 13px; padding:11px 0 13px; display:flex; justify-content:space-between; gap:7px; align-items:center; flex-wrap:wrap; }
+    .bottom-left,.bottom-right { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .mini { border:1px solid #414358; color:#caccdc; background:#27293a; border-radius:8px; padding:7px 9px; font-size:11px; font-weight:750; display:inline-flex; align-items:center; gap:5px; min-height:31px; }
+    .mini:hover { color:white; background:#35384e; }
+    .mini[aria-pressed="true"] { color:var(--lime); border-color:#727b50; }
+    .mini svg { width:14px; height:14px; }
+    .hint-strip { display:flex; align-items:center; justify-content:center; gap:5px; color:#9b9daf; font-size:12px; margin-top:21px; line-height:1.6; text-align:center; }
+    kbd { background:#303143; border:1px solid #4e4f60; border-radius:4px; padding:2px 5px; font-size:10px; }
+    .boards.focused .player-board:not(.in-focus) { display:none; }
+    .boards.focused { grid-template-columns: minmax(0,1fr); max-width:1010px; margin:auto; }
+    .boards.focused .player-board.in-focus { width:100%; }
+    .vote-page,.result-page,.final-page { max-width:1280px; margin:0 auto; padding:38px 0 75px; text-align:center; }
+    .section-title { font-size:clamp(37px,5.5vw,69px); letter-spacing:-.075em; font-weight:1000; text-transform:uppercase; line-height:.98; margin:12px 0 14px; }
+    .section-sub { color:#c5c7d6; font-size:16px; margin:0 auto 30px; line-height:1.6; }
+    .section-sub strong { color:var(--lime); }
+    .vote-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:stretch; }
+    .art-card { background:#202232; border:1px solid #414458; padding:17px; border-radius:20px; text-align:left; }
+    .art-card.one { --accent:var(--pink); }
+    .art-card.two { --accent:var(--purple); }
+    .art-name { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:0 3px 12px; font-weight:950; font-size:18px; }
+    .art-name .index { background:var(--accent); color:#10101b; border-radius:8px; padding:6px 9px; }
+    .art-card img { display:block; width:100%; aspect-ratio:900 / 560; object-fit:contain; background:#fff; border-radius:11px; border:2px solid #525263; }
+    .vote-btn { background:var(--accent); color:#191321; border:none; border-radius:10px; width:100%; min-height:48px; margin-top:14px; font-weight:950; }
+    .vote-btn:hover { filter:brightness(1.14); }
+    .tie-btn { border:1px solid #616276; border-radius:10px; background:#33354b; color:#fff; padding:13px 32px; font-weight:850; margin-top:20px; }
+    .vote-rules { margin:18px 0 0; color:#9396aa; font-size:12px; }
+    .result-medal { font-size:76px; margin-top:15px; }
+    .result-message { font-size:clamp(45px,7vw,86px); letter-spacing:-.07em; line-height:1; margin:10px 0 17px; font-weight:1000; overflow-wrap:anywhere; }
+    .scoreboard { background:#222437; border:1px solid #414357; padding:19px; border-radius:19px; display:grid; grid-template-columns:1fr auto 1fr; gap:20px; align-items:center; max-width:660px; margin:28px auto; }
+    .scoreboard .score-name { color:#c4c5d5; font-size:14px; font-weight:850; overflow-wrap:anywhere; }
+    .scoreboard .score-num { display:block; font-weight:1000; font-size:62px; line-height:1.15; }
+    .scoreboard .versus-text { font-size:19px; color:#777a93; font-weight:1000; }
+    .final-crown { font-size:69px; margin-top:16px; }
+    .recap { margin:40px auto; max-width:1000px; text-align:left; }
+    .recap h3 { font-size:25px; letter-spacing:-.04em; }
+    .recap-list { display:grid; gap:12px; }
+    .recap-item { border:1px solid #3e4054; background:#1e2030; border-radius:14px; padding:15px; display:grid; grid-template-columns:1fr 125px 125px; gap:12px; align-items:center; }
+    .recap-item .recap-prompt { font-weight:950; font-size:16px; margin:5px 0; }
+    .recap-item .recap-winner { font-size:12px; color:#aeb1c5; }
+    .recap-item img { display:block; border-radius:8px; aspect-ratio:900 / 560; background:white; width:100%; object-fit:contain; }
+    .actions-center { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:10px; }
+    dialog { border:1px solid #54566c; background:#222436; color:#f7f7ff; border-radius:20px; padding:25px; max-width:min(520px,calc(100vw - 30px)); box-shadow:0 15px 60px #0009; }
+    dialog::backdrop { background:#03040cc7; backdrop-filter:blur(4px); }
+    dialog h2 { margin:0 0 12px; letter-spacing:-.04em; font-size:27px; }
+    dialog p,dialog li { font-size:14px; line-height:1.65; color:#c4c5d8; }
+    dialog ul { padding-left:19px; }
+    dialog .dialog-actions { display:flex; justify-content:flex-end; margin-top:17px; }
+    .toast { position:fixed; z-index:60; left:50%; bottom:23px; transform:translateX(-50%) translateY(25px); background:#e7ff9c; color:#171b21; border:2px solid #1f2a17; padding:12px 19px; border-radius:12px; box-shadow:0 8px 30px #0006; font-weight:900; font-size:13px; pointer-events:none; opacity:0; transition:opacity .2s,transform .2s; max-width:calc(100vw - 30px); text-align:center; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    @media (max-width:1100px) { .wrap { padding:0 20px; } .lobby { gap:35px; } .hero-copy h1 { font-size:clamp(55px,7vw,78px); } .tool-btn { width:33px;height:33px; } .size-tools input { width:68px; } }
+    @media (max-width:800px) { .site-header { height:70px; } .header-note { display:none; } .lobby { grid-template-columns:1fr; padding:43px 0; } .hero-copy h1 { font-size:clamp(58px,11vw,94px); } .hero-art { height:180px; margin-top:30px; } .doodle { transform:scale(.8) !important; transform-origin:top left; } .doodle.one { left:12px; } .doodle.two { left:190px; transform:scale(.8) rotate(8deg) !important; } .versus { left:154px; top:64px; } .setup-card { max-width:640px; width:100%; margin:auto; } .battle-head { grid-template-columns:1fr 1fr; } .prompt-group { grid-row:2; grid-column:1 / -1; padding-bottom:4px; } .timer-col { grid-column:2; grid-row:1; } .boards { grid-template-columns:1fr; max-width:760px; margin:auto; } .board-heading { padding:14px; } .tool-btn { width:38px; height:38px; } .size-tools input { width:100px; } .vote-grid { grid-template-columns:1fr; max-width:650px; margin:auto; } .recap-item { grid-template-columns:1fr 90px 90px; } }
+    @media (max-width:500px) { .wrap { padding:0 13px; } .brand { font-size:20px; } .site-nav { gap:8px; } .header-help-label { display:none; } .hero-copy h1 { font-size:clamp(53px,14vw,75px); } .hero-copy .lead { font-size:16px; } .setup-card { padding:21px; } .two-col { gap:10px; } .field input,.field select { padding:0 9px; } .battle-actions .left,.battle-actions .right { gap:5px; } .secondary { padding:8px 9px; } .battle-head { margin-bottom:16px; } .round-pill { font-size:10px; } .prompt { font-size:23px; } .art-card { padding:11px; } .recap-item { grid-template-columns:1fr 1fr; } .recap-item .recap-text { grid-column:1/-1; } .scoreboard { gap:8px; } .scoreboard .score-num { font-size:50px; } .hint-strip { display:none; } }
+    @media (prefers-reduced-motion: reduce) { *, *:before, *:after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+    .online-cta { width:100%; margin-top:11px; padding:17px; background:linear-gradient(120deg,#ac8fff,#80c8fc); color:#141327; border:0; border-radius:12px; font-weight:950; letter-spacing:.02em; display:flex; align-items:center; justify-content:space-between; }
+    .online-cta:hover { filter:brightness(1.12); }
+    .join-divider { display:flex; align-items:center; gap:11px; color:#8f92a7; font-size:11px; font-weight:900; margin:21px 0 11px; letter-spacing:.12em; }
+    .join-divider::before,.join-divider::after { content:""; height:1px; background:#404358; flex:1; }
+    .join-inputs { margin-bottom:10px; }
+    .code-input { text-transform:uppercase; font-weight:900; letter-spacing:.18em; }
+    .join-button { width:100%; min-height:48px; border:1px solid #8c80c7; background:#302b4e; color:#eee5ff; font-weight:900; }
+    .network-notice { font-size:12px; color:#aeb1c5; text-align:center; margin-top:12px; line-height:1.4; }
+    .prompting-page { min-height:70vh;padding:55px 15px;display:flex;justify-content:center;align-items:flex-start; }
+    .prompting-card { width:min(100%,675px);padding:clamp(24px,4vw,39px);background:#1c1e2d;border:1px solid #61607b;border-radius:23px;box-shadow:var(--shadow); }
+    .prompting-card h2 { margin:10px 0;font-size:clamp(32px,5vw,48px);line-height:1.05;letter-spacing:-.05em;font-weight:1000; }
+    .prompting-card .section-sub { margin:10px 0 26px;max-width:570px; }
+    .prompt-counter { display:inline-flex;background:#332d4d;color:#dcceff;border:1px solid #68558a;padding:8px 14px;border-radius:999px;font-weight:950;margin:13px 0; }
+    .prompt-field { margin:17px 0; }
+    .prompt-field label { display:block;color:#d8ff64;font-size:12px;font-weight:900;letter-spacing:.07em;margin-bottom:7px; }
+    .prompt-field input { width:100%;border-radius:12px;padding:15px;background:#292b3c;border:1px solid #62637d;color:#fff;font:inherit;font-weight:650;font-size:15px; }
+    .prompt-field input:focus { outline:2px solid #bb9eff;outline-offset:2px; }
+    .prompt-field input:disabled { color:#aaaac2;background:#222431; }
+    .prompt-guidelines { margin:12px 0 18px;color:#adb0c7;font-size:13px;line-height:1.5; }
+    .prompt-status { color:var(--lime);font-weight:800;font-size:14px;min-height:20px;margin:10px 0; }
+    .canvas-challenge { display:block;background:#2c2e42;border:1px solid #505471;color:#e5d9ff;font-weight:800;font-size:12px;line-height:1.5;padding:10px 16px;margin:8px 12px 12px;border-radius:10px; }
+    .canvas-challenge[hidden] {display:none;}
+    .art-assignment { display:block;font-size:12px;color:#ddd0ff;background:#2c2840;border:1px solid #60587d;border-radius:8px;margin:10px 0;padding:9px 12px;line-height:1.5; }
+    @media(max-width:500px){.prompting-page{padding:25px 0}.prompting-card{padding:20px}}
+    .waiting-page { min-height:73vh; padding:60px 15px; display:flex; align-items:flex-start; justify-content:center; }
+    .waiting-card { width:min(100%,620px); padding:35px; background:#1c1e2d; border:1px solid #555370; border-radius:22px; text-align:center; box-shadow:var(--shadow); }
+    .waiting-card h2 { font-weight:1000; font-size:clamp(32px,5vw,53px); letter-spacing:-.06em; margin:14px 0 6px; }
+    .muted { color:#b9bacd; }
+    .room-code { font-size:clamp(44px,9vw,74px); font-weight:1000; letter-spacing:.14em; color:var(--lime); line-height:1.25; margin:20px 0; }
+    .waiting-actions { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    .waiting-players { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:30px; }
+    .waiting-player { border:1px solid #494b60; background:#292b3e; padding:17px 8px; border-radius:12px; color:#f3f0ff; font-weight:900; }
+    .waiting-player.online { border-color:#b2d879; }
+    .waiting-hint { color:#b8bbce; min-height:40px; margin:21px 0 6px; font-size:14px; }
+    .room-banner { background:#27243c; border:1px solid #6d608b; color:#ded3ff; border-radius:12px; padding:10px 14px; margin:20px 0 2px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; font-weight:900; }
+    .online-locked .tool-wrap, .online-locked .board-bottom button:not(.download) { pointer-events:none; opacity:.48; }
+    .online-locked canvas { pointer-events:none; }
+    .online-locked .player-name .name-text::after { content:" · OPPONENT"; font-size:10px; color:#a4a6b7; }
+    .online-mine .player-name .name-text::after { content:" · YOU"; font-size:10px; color:var(--lime); }
+    .vote-btn:disabled, .tie-btn:disabled { opacity:.44; cursor:not-allowed; }
+    @media(max-width:500px){.waiting-card{padding:20px}.waiting-players{grid-template-columns:1fr}.waiting-page{padding:35px 0}}
+
+    /* Online group drawing + flipbook */
+    .boards.multiplayer { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+    .boards.multiplayer .player-board.online-locked .tool-wrap,.boards.multiplayer .player-board.online-locked .animation-controls,.boards.multiplayer .player-board.online-locked .board-bottom button:not(.download){display:none;}
+    .boards.multiplayer .player-board.online-locked .canvas-cover{pointer-events:none;}
+    .boards.multiplayer .player-board.online-locked .canvas-frame{margin-bottom:13px;}
+    .boards.multiplayer .player-board.online-mine{border-color:var(--lime);box-shadow:0 0 0 1px #d8ff6440;}
+    /* In online battles, each artist has one private full-width studio.
+       Opponents' drawings are ONLY shown in the voting gallery. */
+    .boards.multiplayer.private-studio {grid-template-columns:minmax(0,1fr);max-width:1100px;margin:0 auto;}
+    .boards.multiplayer.private-studio > .player-board:not(.online-mine){display:none !important;}
+    .boards.multiplayer.private-studio .player-board.online-mine{width:100%;}
+    .opacity-tools{display:flex;align-items:center;gap:10px;margin-top:13px;border-top:1px solid #393b51;padding-top:12px;}
+    .opacity-tools label{font-weight:900;font-size:11px;color:#b7b9c9;}
+    .opacity-tools input{accent-color:var(--accent);flex:1;min-width:50px;}
+    .opacity-tools strong{font-size:11px;color:var(--lime);min-width:38px;text-align:right;}
+    .animation-controls{display:none;border-top:1px solid #414254;padding:13px;background:#22243a;}
+    .animation-mode .animation-controls{display:block;}
+    .frame-heading{display:flex;align-items:center;justify-content:space-between;color:var(--lime);font-size:11px;font-weight:950;margin-bottom:10px;letter-spacing:.04em;}
+    .frame-actions{display:flex;gap:5px;flex-wrap:wrap;}
+    .frame-hint{font-size:10px;line-height:1.4;color:#adafc5;margin-top:8px;}
+    .online-vote-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,295px),1fr));}
+    .online-vote-grid .art-card{--accent:var(--purple);}
+    .group-scoreboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:26px auto;max-width:1080px;}
+    .group-score{background:#242638;border:1px solid #48495a;border-radius:13px;padding:14px 10px;}
+    .group-score .score-num{display:block;font-size:45px;line-height:1.1;color:var(--lime);}
+    .rank-number{font-size:11px;color:var(--purple);font-weight:900;}
+    .group-score small{color:#9699b0;letter-spacing:.09em;font-size:10px;font-weight:900;}
+    .art-card .animation-badge{display:block;font-size:11px;color:var(--lime);margin-top:6px;}
+    .reveal-anim{animation:reveal-pop .6s cubic-bezier(.2,1.7,.3,1) both;}
+    @keyframes reveal-pop{0%{transform:scale(.6);opacity:0;filter:blur(8px)}100%{transform:scale(1);opacity:1;filter:blur(0)}}
+    .confetti-layer{pointer-events:none;position:fixed;z-index:90;inset:0;overflow:hidden;}
+    .confetti-piece{position:absolute;top:-28px;width:9px;height:16px;border-radius:3px;animation:confetti-fall 2.6s ease-in forwards;}
+    @keyframes confetti-fall{to{transform:translateY(110vh) rotate(920deg);opacity:0;}}
+    @media(max-width:800px){.boards.multiplayer{grid-template-columns:1fr;}.online-vote-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,255px),1fr));}}
+
+    .recap-item.group-recap{display:block;}
+    .recap-artworks{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px;margin-top:12px;}
+    .recap-artworks a{display:block;}
+    .recap-artworks img{width:100%;aspect-ratio:900/560;object-fit:cover;}
+    .waiting-players{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));}
+    .multiplayer .player-board{--accent:var(--purple);}
+    #revealVotesBtn{margin:18px auto 0;}
+  </style>
+</head>
+<body>
+  <svg style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="ic-pen" viewBox="0 0 24 24"><path d="m4 20 4.5-1 11-11.3a2.2 2.2 0 0 0-3.2-3.1L5 15.7 4 20ZM14.5 6.5l3 3M3 21h18"/></symbol>
+    <symbol id="ic-marker" viewBox="0 0 24 24"><path d="M13 4 4 13l7 7 9-9-7-7ZM11 20H3m16-12 2-2M8 17l9-9"/></symbol>
+    <symbol id="ic-spray" viewBox="0 0 24 24"><path d="M4 10h10l2 10H3l1-10Zm4-3h5l1 3M7 7V4h8m3 2h.01M21 9h.01M19 13h.01M21 3h.01"/></symbol>
+    <symbol id="ic-eraser" viewBox="0 0 24 24"><path d="m7 20-4-4a2 2 0 0 1 0-3L13 3a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-9 9H7ZM9 9l8 8M12 20h10"/></symbol>
+    <symbol id="ic-fill" viewBox="0 0 24 24"><path d="m11 3 9 9-8 8a2 2 0 0 1-3 0l-6-6a2 2 0 0 1 0-3l8-8ZM4 12h16M20 17s-2 2.2-2 3a2 2 0 0 0 4 0c0-.8-2-3-2-3Z"/></symbol>
+    <symbol id="ic-line" viewBox="0 0 24 24"><path d="M4 20 20 4"/></symbol>
+    <symbol id="ic-rect" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"/></symbol>
+    <symbol id="ic-ellipse" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="7"/></symbol>
+    <symbol id="ic-dropper" viewBox="0 0 24 24"><path d="m4 20 4-1 11-11-3-3L5 16l-1 4ZM14 6l4-4 4 4-4 4"/></symbol>
+    <symbol id="ic-text" viewBox="0 0 24 24"><path d="M4 6V4h16v2M12 4v16m-4 0h8"/></symbol>
+    <symbol id="ic-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+    <symbol id="ic-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5m5 5H9a5 5 0 0 0 0 10h3"/></symbol>
+    <symbol id="ic-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
+    <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"/></symbol>
+    <symbol id="ic-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
+    <symbol id="ic-focus" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+    <symbol id="ic-play" viewBox="0 0 24 24"><path d="m7 4 13 8-13 8V4Z"/></symbol>
+    <symbol id="ic-pause" viewBox="0 0 24 24"><path d="M7 4v16M17 4v16"/></symbol>
+    <symbol id="ic-sound" viewBox="0 0 24 24"><path d="M5 9H2v6h3l5 4V5L5 9Zm9 0a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></symbol>
+    <symbol id="ic-muted" viewBox="0 0 24 24"><path d="M5 9H2v6h3l5 4V5L5 9Zm8 1 7 7m0-7-7 7"/></symbol>
+    <symbol id="ic-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2c-1 .8-2 1.1-2 3m0 4h.01"/></symbol>
+    <symbol id="ic-spark" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></symbol>
+  </svg>
+  <div class="wrap">
+    <header class="site-header">
+      <a class="brand" href="#" id="brandLink" aria-label="Draw Duel home"><span class="brand-mark"><svg class="ic"><use href="#ic-pen"/></svg></span><span>DRAW<span>DUEL</span></span></a>
+      <nav class="site-nav" aria-label="Main navigation"><span class="header-note">CREATE. COMPETE. REPEAT.</span><button class="icon-btn" id="soundBtn" aria-label="Mute sounds" title="Toggle sounds"><svg class="ic"><use href="#ic-sound"/></svg></button><button class="icon-btn" id="helpBtn"><svg class="ic"><use href="#ic-help"/></svg><span class="header-help-label">How to play</span></button></nav>
+    </header>
+
+    <main id="lobby" class="screen lobby">
+      <div class="hero-copy">
+        <div class="eyebrow">✳ ONLINE + LOCAL DRAWING BATTLES</div>
+        <h1>READY.<br>SET.<span class="highlight">DRAW!</span></h1>
+        <p class="lead">Draw against 2–8 artists from anywhere. Create a room, share a code, and race the clock — or animate a flipbook frame by frame. Local two-player mode works too.</p>
+        <div class="hero-tags"><div class="tag"><strong>10</strong> drawing tools</div><div class="tag">✦ <strong>3</strong> prompts each round</div><div class="tag">⚡ No sign-up needed</div></div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="doodle one"><svg viewBox="0 0 150 150"><path d="M37 120q-29-38-1-73 37-50 80-4 22 36-9 75" fill="#6cde96" stroke="#202331" stroke-width="6" stroke-linejoin="round"/><path d="M45 119V91m45 29V86" stroke="#208864" stroke-width="5"/><circle cx="55" cy="75" r="7" fill="#212633"/><circle cx="96" cy="75" r="7" fill="#212633"/><path d="M64 95q12 11 25-1" fill="none" stroke="#202331" stroke-width="5" stroke-linecap="round"/><path d="m31 52-9-12m91 4 9-17M71 31V15" stroke="#202331" stroke-width="5" stroke-linecap="round"/></svg></div>
+          <div class="doodle two"><svg viewBox="0 0 150 150"><path d="m28 97 46-71 49 72-95-1Z" fill="#ffc354" stroke="#29232e" stroke-width="7" stroke-linejoin="round"/><path d="m46 97-4 21m67-21 4 21" stroke="#29232e" stroke-width="7" stroke-linecap="round"/><circle cx="61" cy="72" r="7" fill="#28232d"/><circle cx="91" cy="72" r="7" fill="#28232d"/><path d="M68 88q9 6 17 0" fill="none" stroke="#28232d" stroke-width="4" stroke-linecap="round"/><circle cx="77" cy="44" r="7" fill="#f6728f"/><circle cx="42" cy="86" r="6" fill="#f6728f"/><circle cx="103" cy="88" r="5" fill="#f6728f"/></svg></div>
+          <div class="versus">VS</div>
+        </div>
+      </div>
+      <form class="setup-card" id="setupForm">
+        <div class="card-top"><div><div class="eyebrow">Your battle arena</div><h2>Set up your clash</h2><p>Customize your showdown, then go create.</p></div><div class="corner-spark">⚡</div></div>
+        <div class="two-col">
+          <div class="field"><label for="name0"><span class="player-label"><span class="player-dot"></span> Player 1</span></label><input id="name0" maxlength="20" value="Player 1" autocomplete="off" required></div>
+          <div class="field"><label for="name1"><span class="player-label"><span class="player-dot two"></span> Player 2</span></label><input id="name1" maxlength="20" value="Player 2" autocomplete="off" required></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label for="duration">Round timer</label><select id="duration"><option value="45">45 seconds — Speedrun</option><option value="60">60 seconds — Fast</option><option value="90" selected>90 seconds — Classic</option><option value="120">2 minutes</option><option value="180">3 minutes</option><option value="300">5 minutes — Chill</option></select></div>
+          <div class="field"><label for="rounds">Number of rounds</label><select id="rounds"><option value="1">1 round — Quick duel</option><option value="3" selected>3 rounds — Best of 3</option><option value="5">5 rounds — Showdown</option><option value="7">7 rounds — Marathon</option><option value="10">10 rounds — Legend</option></select></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label for="maxPlayers">Online room size</label><select id="maxPlayers"><option value="2">2 artists</option><option value="3">3 artists</option><option value="4" selected>4 artists</option><option value="5">5 artists</option><option value="6">6 artists</option><option value="7">7 artists</option><option value="8">8 artists</option></select></div>
+          <div class="field"><label for="artMode">Battle mode</label><select id="artMode"><option value="drawing">🎨 Drawing battle</option><option value="animation">🎞️ Flipbook animation</option></select></div>
+        </div>
+        <div class="field"><label for="category">Idea category for prompt suggestions</label><select id="category"><option value="all">🎲 Surprise me — all challenges</option><option value="silly">🤪 Funny & absurd</option><option value="animals">🐻 Animals & creatures</option><option value="food">🍕 Food with personality</option><option value="fantasy">🐉 Fantasy & sci-fi</option><option value="objects">🎮 Weird gadgets & objects</option><option value="characters">🦸 Create a character</option><option value="action">⚡ Action poses</option></select></div>
+        <div class="field"><label for="customPrompt">Your first prompt idea <span style="font-weight:500;color:#9b9eaf">(optional)</span></label><input id="customPrompt" maxlength="90" placeholder="e.g. A dinosaur playing basketball" autocomplete="off"><div class="small-caption">Use this as the first prompt you write when you are the host. Everyone submits three prompts each round.</div></div>
+        <button id="localStartBtn" type="button" class="primary full">START LOCAL BATTLE <svg class="ic"><use href="#ic-play"/></svg></button>
+        <button type="button" id="createOnlineBtn" class="online-cta full">🌐 CREATE ONLINE ROOM <span>→</span></button>
+        <div class="join-divider"><span>OR JOIN A FRIEND</span></div>
+        <div class="two-col join-inputs">
+          <div class="field"><label for="joinName">Your name</label><input id="joinName" maxlength="20" value="Player 2" autocomplete="nickname"></div>
+          <div class="field"><label for="joinCode">Room code</label><input id="joinCode" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input"></div>
+        </div>
+        <button type="button" id="joinOnlineBtn" class="secondary full join-button">JOIN ONLINE BATTLE →</button>
+        <div class="network-notice" id="networkNotice" aria-live="polite">Online play uses room codes. No accounts needed.</div>
+        <button type="button" class="resume" id="resumeBtn" hidden>↻ Resume your saved battle</button>
+        <div class="small-caption" style="text-align:center;margin-top:14px">Local mode works offline • Online mode uses a hosted server</div>
+      </form>
+    </main>
+
+    <section id="waiting" class="screen waiting-page" hidden>
+      <div class="waiting-card">
+        <div class="eyebrow">🌐 ONLINE DRAW DUEL</div>
+        <h2>YOUR ROOM IS READY.</h2>
+        <p class="muted">Send this room code or invite link to your friends. Start when at least two artists join.</p>
+        <div class="room-code" id="waitingCode">------</div>
+        <div class="waiting-actions"><button class="primary" id="copyInviteBtn">📋 Copy invite link</button><button class="secondary" id="copyCodeBtn">Copy code</button></div>
+        <div class="waiting-players" id="waitingPlayers"></div>
+        <p class="waiting-hint" id="waitingHint">Waiting for more artists to join...</p>
+        <button class="primary full" id="beginOnlineBtn" disabled>START ONLINE BATTLE →</button>
+        <button class="secondary full" id="leaveWaitingBtn" style="margin-top:12px">Leave room</button>
+      </div>
+    </section>
+
+    <section id="prompting" class="screen prompting-page" hidden aria-label="Create drawing prompts">
+      <div class="prompting-card">
+        <div class="eyebrow">✍️ WRITE THE CHALLENGES</div>
+        <h2 id="promptingTitle">Create 3 drawing prompts</h2>
+        <p class="section-sub" id="promptingDescription">Invent three fun, creative things someone else could draw. You will never receive your own prompt.</p>
+        <div class="prompt-counter" id="promptingCounter">0 / 2 players ready</div>
+        <form id="promptForm" autocomplete="off">
+          <div class="prompt-field"><label for="challenge0">PROMPT 1</label><input id="challenge0" maxlength="90" minlength="4" required placeholder="A cat piloting a giant robot"></div>
+          <div class="prompt-field"><label for="challenge1">PROMPT 2</label><input id="challenge1" maxlength="90" minlength="4" required placeholder="An angry cupcake with superhero powers"></div>
+          <div class="prompt-field"><label for="challenge2">PROMPT 3</label><input id="challenge2" maxlength="90" minlength="4" required placeholder="A dragon wearing roller skates"></div>
+          <p class="prompt-guidelines">Make all three prompts different. Think characters, creatures, goofy objects, or action scenes — no landscapes or locations. Every player receives a random prompt from a different person.</p>
+          <button type="button" class="secondary" id="ideaBtn">🎲 Get three idea starters</button>
+          <div class="prompt-status" id="promptingStatus" role="status" aria-live="polite"></div>
+          <button id="promptSubmitBtn" class="primary full" type="submit">SUBMIT 3 PROMPTS →</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="battle" class="screen game" hidden aria-label="Drawing battle">
+      <div class="room-banner" id="roomBanner" hidden><span id="roomBannerText">🌐 ONLINE DUEL</span><span><button id="roomCopyBtn" class="mini">📋 Copy invite</button></span></div>
+      <div class="battle-head"><div class="round-detail"><span class="round-pill" id="roundPill">ROUND 1 / 3</span><span class="prompt-head" id="categoryLabel">QUICK DOODLE</span></div><div class="prompt-group"><div class="prompt-head">YOUR DRAWING CHALLENGE</div><div class="prompt" id="promptDisplay">A dog wearing sunglasses</div></div><div class="timer-col"><div class="timer-display" id="timerDisplay" aria-live="off">01:30</div><div class="timer-label" id="timerCaption">Ready when you are</div></div></div>
+      <div class="time-track"><div class="time-fill" id="timeFill"></div></div>
+      <div class="battle-actions"><div class="left"><button class="primary small-primary" id="startPauseBtn"><svg class="ic"><use href="#ic-play"/></svg><span>Start drawing</span></button><button class="secondary" id="extraBtn">+ 15 seconds</button><button class="secondary" id="newPromptBtn" title="Only available before the clock starts"><svg class="ic"><use href="#ic-spark"/></svg>Reroll prompt</button></div><div class="right"><button class="secondary warn" id="judgeBtn">Finish & vote →</button><button class="secondary" id="exitBtn">Leave battle</button></div></div>
+      <div class="boards" id="boards">
+        <article class="player-board" data-player="0" id="board0"><div class="board-heading"><div class="player-name"><span class="player-badge">1</span><span class="name-text">Player 1</span></div><div class="board-heading-actions"><span class="score-pill">0 PTS</span><button class="focus-btn" aria-label="Focus this canvas" title="Focus this canvas"><svg class="ic"><use href="#ic-focus"/></svg></button></div></div><div class="canvas-challenge" hidden></div><div class="canvas-frame"><canvas width="900" height="560" aria-label="Player 1 drawing canvas"></canvas><div class="grid-overlay" hidden></div><div class="canvas-cover"><div class="cover-inner"><strong>Get ready! ✏️</strong><small>Hit “Start drawing” to begin the clock and unlock your canvas.</small></div></div></div><div class="tool-wrap"><div class="tool-header"><span class="tool-title">YOUR ART STUDIO</span><span class="tool-name">✎ Pencil</span></div><div class="tool-row tools"></div><div class="color-tool-row"><div class="palette"></div><div class="size-tools"><label>SIZE</label><input class="brush-size" aria-label="Brush size player 1" type="range" min="2" max="48" value="8"><span class="size-value">8</span></div></div><div class="opacity-tools"><label>OPACITY</label><input class="brush-opacity" type="range" min="1" max="100" value="100" aria-label="Brush opacity"><strong class="opacity-value">100%</strong></div></div><div class="board-bottom"><div class="bottom-left"><button class="mini undo" title="Undo (Ctrl+Z)"><svg class="ic"><use href="#ic-undo"/></svg> Undo</button><button class="mini redo" title="Redo (Ctrl+Y)"><svg class="ic"><use href="#ic-redo"/></svg> Redo</button><button class="mini grid-toggle" aria-pressed="false"><svg class="ic"><use href="#ic-grid"/></svg> Grid</button><button class="mini fill-toggle" aria-pressed="false" title="Draw filled shapes">Filled shapes</button></div><div class="bottom-right"><button class="mini download"><svg class="ic"><use href="#ic-download"/></svg> PNG</button><button class="mini clear"><svg class="ic"><use href="#ic-trash"/></svg> Clear</button></div></div></article>
+        <article class="player-board" data-player="1" id="board1"><div class="board-heading"><div class="player-name"><span class="player-badge">2</span><span class="name-text">Player 2</span></div><div class="board-heading-actions"><span class="score-pill">0 PTS</span><button class="focus-btn" aria-label="Focus this canvas" title="Focus this canvas"><svg class="ic"><use href="#ic-focus"/></svg></button></div></div><div class="canvas-challenge" hidden></div><div class="canvas-frame"><canvas width="900" height="560" aria-label="Player 2 drawing canvas"></canvas><div class="grid-overlay" hidden></div><div class="canvas-cover"><div class="cover-inner"><strong>Get ready! ✏️</strong><small>Hit “Start drawing” to begin the clock and unlock your canvas.</small></div></div></div><div class="tool-wrap"><div class="tool-header"><span class="tool-title">YOUR ART STUDIO</span><span class="tool-name">✎ Pencil</span></div><div class="tool-row tools"></div><div class="color-tool-row"><div class="palette"></div><div class="size-tools"><label>SIZE</label><input class="brush-size" aria-label="Brush size player 2" type="range" min="2" max="48" value="8"><span class="size-value">8</span></div></div><div class="opacity-tools"><label>OPACITY</label><input class="brush-opacity" type="range" min="1" max="100" value="100" aria-label="Brush opacity"><strong class="opacity-value">100%</strong></div></div><div class="board-bottom"><div class="bottom-left"><button class="mini undo" title="Undo (Ctrl+Z)"><svg class="ic"><use href="#ic-undo"/></svg> Undo</button><button class="mini redo" title="Redo (Ctrl+Y)"><svg class="ic"><use href="#ic-redo"/></svg> Redo</button><button class="mini grid-toggle" aria-pressed="false"><svg class="ic"><use href="#ic-grid"/></svg> Grid</button><button class="mini fill-toggle" aria-pressed="false" title="Draw filled shapes">Filled shapes</button></div><div class="bottom-right"><button class="mini download"><svg class="ic"><use href="#ic-download"/></svg> PNG</button><button class="mini clear"><svg class="ic"><use href="#ic-trash"/></svg> Clear</button></div></div></article>
+      </div>
+      <div class="hint-strip">💡 Tip: Pick tools on each canvas independently. Use <kbd>B</kbd> brush, <kbd>E</kbd> eraser, <kbd>G</kbd> fill, <kbd>Ctrl Z</kbd> undo, or the focus button for a bigger canvas.</div>
+    </section>
+
+    <section id="vote" class="screen vote-page" hidden><div class="eyebrow">Time to crown an artist</div><h2 class="section-title">THE BIG REVEAL!</h2><p class="section-sub">Art challenges: <strong id="votePrompt"></strong>. Who drew it better? Choose a winner or call it a tie.</p><div class="vote-grid" id="localVoteGrid"><article class="art-card one"><div class="art-name"><span id="voteName0">Player 1</span><span class="index">ART #1</span></div><div class="art-assignment" id="voteChallenge0"></div><img id="voteImg0" alt="Player 1 completed artwork"><button class="vote-btn" data-vote="0" id="voteBtn0">🏆 Vote for Player 1</button><button class="mini" id="saveVote0" style="margin-top:10px">↓ Save artwork</button></article><article class="art-card two"><div class="art-name"><span id="voteName1">Player 2</span><span class="index">ART #2</span></div><div class="art-assignment" id="voteChallenge1"></div><img id="voteImg1" alt="Player 2 completed artwork"><button class="vote-btn" data-vote="1" id="voteBtn1">🏆 Vote for Player 2</button><button class="mini" id="saveVote1" style="margin-top:10px">↓ Save artwork</button></article></div><div class="vote-grid online-vote-grid" id="onlineVoteGrid" hidden></div><button class="tie-btn" data-vote="tie">🤝 It's a tie — both get 1 point</button><button id="revealVotesBtn" class="secondary" hidden>🏆 Reveal votes now</button><p class="vote-rules" id="voteRules">Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.</p></section>
+
+    <section id="result" class="screen result-page" hidden><div class="eyebrow" id="resultRound">Round 1 complete</div><div class="result-medal" id="resultMedal">🏆</div><h2 class="result-message" id="resultTitle">Player 1 wins!</h2><p class="section-sub" id="resultText">What a masterpiece. On to the next challenge.</p><div class="scoreboard"><div><div class="score-name" id="resultName0">Player 1</div><strong class="score-num" id="resultScore0">1</strong></div><div class="versus-text">VS</div><div><div class="score-name" id="resultName1">Player 2</div><strong class="score-num" id="resultScore1">0</strong></div></div><div class="group-scoreboard" id="resultGroupScores" hidden></div><div class="actions-center"><button class="primary" id="nextRoundBtn">NEXT ROUND <svg class="ic"><use href="#ic-play"/></svg></button></div></section>
+
+    <section id="final" class="screen final-page" hidden><div class="eyebrow">The showdown is over</div><div class="final-crown" id="finalCrown">👑</div><h2 class="section-title" id="finalTitle">A NEW CHAMPION!</h2><p class="section-sub" id="finalSubtitle">That was legendary.</p><div class="scoreboard"><div><div class="score-name" id="finalName0">Player 1</div><strong class="score-num" id="finalScore0">0</strong></div><div class="versus-text">VS</div><div><div class="score-name" id="finalName1">Player 2</div><strong class="score-num" id="finalScore1">0</strong></div></div><div class="group-scoreboard" id="finalGroupScores" hidden></div><div class="actions-center"><button class="primary" id="rematchBtn">⚡ PLAY AGAIN</button><button class="secondary" id="copyResultsBtn">Copy results</button><button class="secondary" id="newPlayersBtn">New players</button></div><div class="recap"><h3>🖼️ Your battle gallery</h3><div class="recap-list" id="recapList"></div><p class="small-caption">Tip: Right-click an artwork or use the save links to keep your drawings.</p></div></section>
+
+    <footer class="footer-note">✳ DRAWDUEL — Art battles with friends. Local mode works offline; online mode requires the game server.</footer>
+  </div>
+  <dialog id="helpDialog"><h2>🎨 How to play</h2><p><strong>1.</strong> For online rooms, choose 2–8 players. Pick drawing or flipbook animation mode, time and prompts. For local mode, enter two names.<br><strong>2.</strong> Hit <strong>Start drawing</strong>. Before every round each player writes three prompts. Each player is assigned one from another player and draws their own challenge when the clock starts.<br><strong>3.</strong> Compare the artwork and vote. Most points after the final round wins!</p><p><strong>Your drawing toolkit:</strong> Pencil, marker, spray, eraser, paint bucket, line, rectangle, ellipse, color picker and text. Each player gets their own colors, opacity, sizes, undo/redo, grid, filled-shape toggle and PNG download. In animation mode, create up to 12 frames, duplicate or add blank frames, preview the motion, and export WebM.</p><p><strong>Shortcuts:</strong> Click a canvas to make it active, then press B (brush), M (marker), S (spray), E (eraser), G (fill), L (line), R (rectangle), O (ellipse), I (eyedropper), T (text). Ctrl/Cmd + Z to undo, Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z to redo. [ and ] change size.</p><p class="small-caption">Choose Start Local Battle for two artists on one device, or Create Online Room to invite up to seven friends on different devices. The room host controls the clock and next rounds. Everyone in the room can vote for their favorite art. Most votes wins; tied leaders each earn one point. Online rooms are temporary, so save art as PNG before leaving.</p><div class="dialog-actions"><button class="primary small-primary" id="helpCloseBtn">Got it!</button></div></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    (() => {
+      'use strict';
+      const $ = (q, root=document) => root.querySelector(q);
+      const $$ = (q, root=document) => [...root.querySelectorAll(q)];
+      const STORE = 'drawduel-v1-save';
+      const PREFS = 'drawduel-v1-prefs';
+      const COLORS = ['#24243a','#f35373','#ff9838','#ffdf53','#50c878','#47b4ee','#9362ed','#ffffff'];
+      const TOOLS = [
+        ['pen','Pencil','ic-pen','B'],['marker','Marker','ic-marker','M'],['spray','Spray','ic-spray','S'],['eraser','Eraser','ic-eraser','E'],
+        ['fill','Paint bucket','ic-fill','G'],['line','Line','ic-line','L'],['rect','Rectangle','ic-rect','R'],['ellipse','Ellipse','ic-ellipse','O'],
+        ['picker','Color picker','ic-dropper','I'],['text','Text','ic-text','T']
+      ];
+      const PROMPTS = {
+        "silly": [
+          "A furious banana with tiny boxing gloves",
+          "A potato trying to look intimidating",
+          "A toaster wearing a superhero cape",
+          "A slice of pizza doing a backflip",
+          "A chicken with a suspicious mustache",
+          "A snail driving a race car",
+          "A duck with twelve tiny hats",
+          "A jellybean lifting dumbbells",
+          "A grumpy cloud with eyebrows",
+          "A cactus trying to give a high five",
+          "A dinosaur with the tiniest arms ever",
+          "A worm wearing roller skates",
+          "A marshmallow playing electric guitar",
+          "A pencil challenging an eraser to a duel",
+          "A banana doing the worm dance",
+          "A fish wearing a business suit",
+          "A goose acting like a secret agent",
+          "A sandwich with muscular arms",
+          "A raccoon caught stealing a cookie",
+          "A frog wearing way too many sunglasses",
+          "A vacuum cleaner scared of dust",
+          "A pineapple having a bad hair day",
+          "A rubber duck with a villain mustache",
+          "A popcorn kernel posing like a bodybuilder",
+          "A shocked egg with dramatic eyelashes",
+          "A potato with a jetpack",
+          "A mischievous sock stealing shoes",
+          "A confused alien eating noodles",
+          "A smiling pickle wielding a spoon",
+          "A dramatic avocado fainting"
+        ],
+        "animals": [
+          "A red panda with a giant fluffy tail",
+          "A penguin with oversized headphones",
+          "A sleepy sloth with a coffee mug",
+          "A tiger wearing a crown",
+          "A chameleon wearing camouflage sneakers",
+          "A lion with an incredible hairstyle",
+          "A pug dressed as a knight",
+          "A shark using a tiny toothbrush",
+          "An octopus playing four instruments",
+          "A bunny piloting a miniature robot",
+          "A raccoon wearing a detective hat",
+          "A hedgehog with a punk-rock mohawk",
+          "A crocodile wearing braces",
+          "An owl with a huge stack of books",
+          "A giraffe with a very long scarf",
+          "A capybara wearing a bow tie",
+          "A sea turtle with rocket boosters",
+          "A grizzly bear knitting a sweater",
+          "A baby dragon sneezing bubbles",
+          "A cat with a wizard hat",
+          "A fox wearing a raincoat",
+          "A panda balancing a bowling ball",
+          "A kangaroo wearing boxing gloves",
+          "A tiny bat holding a lantern",
+          "A squirrel guarding an enormous acorn",
+          "A walrus with fancy sunglasses",
+          "A jellyfish with a glowing crown",
+          "A turtle on roller skates",
+          "A flamingo wearing sneakers",
+          "A corgi with butterfly wings"
+        ],
+        "food": [
+          "A donut with sharp vampire teeth",
+          "An ice cream cone with a grumpy face",
+          "A taco riding a skateboard",
+          "A sushi roll shaped like a dragon",
+          "A burger with superhero muscles",
+          "A strawberry playing the drums",
+          "A melting chocolate robot",
+          "A pineapple wearing a crown",
+          "A milkshake with dragon wings",
+          "A spooky cupcake with one eye",
+          "A slice of watermelon with tiny legs",
+          "A waffle dressed like a superhero",
+          "A pancake holding a golden trophy",
+          "A cookie monster made of cookies",
+          "A spaghetti monster with ten arms",
+          "A hot dog with a jetpack",
+          "A popcorn bucket with wild hair",
+          "A carrot pretending to be a pirate",
+          "A giant gummy bear with roller skates",
+          "A lemon making a sour face",
+          "A peach wearing boxing gloves",
+          "A marshmallow riding a rocket",
+          "A ramen bowl with a fierce expression",
+          "A donut shaped like a planet",
+          "A burrito with robot arms",
+          "A cupcake wearing knight armor",
+          "A smiling sushi ninja",
+          "A kiwi fruit doing karate"
+        ],
+        "fantasy": [
+          "A baby dragon holding a tiny sword",
+          "A robot wizard casting a glitch spell",
+          "A ghost wearing a disco outfit",
+          "A unicorn with laser eyes",
+          "A knight with a giant toothbrush",
+          "A wizard with a beard made of stars",
+          "A friendly monster with seven eyes",
+          "A miniature dragon curled around a gem",
+          "A mermaid with a robotic tail",
+          "A phoenix made of blue flames",
+          "A goblin wearing fancy armor",
+          "An astronaut shaking hands with an alien",
+          "A vampire with a pet bat on its head",
+          "A werewolf wearing a varsity jacket",
+          "A crystal golem with glowing eyes",
+          "A fairy riding a bumblebee",
+          "A cyborg with a transparent robot arm",
+          "A pirate skeleton holding a rubber chicken",
+          "A giant spider with a top hat",
+          "A cyclops wearing glasses",
+          "A wizard frog with a glowing staff",
+          "A knight riding a giant beetle",
+          "A space pirate with four arms",
+          "A tiny troll holding an enormous hammer",
+          "A ninja dinosaur throwing a shuriken",
+          "A cyber dragon with neon wings",
+          "A two-headed dragon arguing with itself",
+          "A floating robot with a hologram face",
+          "A monster made of slime",
+          "A skeleton playing electric guitar"
+        ],
+        "objects": [
+          "A futuristic game controller with extra buttons",
+          "A sneaker with rocket boosters",
+          "A haunted television with glowing eyes",
+          "A backpack full of unexpected gadgets",
+          "A skateboard with dragon wings",
+          "A clock melting like cheese",
+          "A fancy sword shaped like a fish",
+          "A robotic pencil sharpener with teeth",
+          "A strange invention made of kitchen tools",
+          "An umbrella with mechanical wings",
+          "A gaming chair with monster arms",
+          "A pair of headphones shaped like cats",
+          "A glowing treasure chest with eyes",
+          "A bicycle with giant spring wheels",
+          "A wristwatch that projects holograms",
+          "A coffee mug shaped like a dragon",
+          "A toy robot with a missing screw",
+          "A boombox with dinosaur spikes",
+          "A magical lamp with a goofy face",
+          "A skateboard shaped like a banana",
+          "A vending machine that has come alive",
+          "A roller skate powered by tiny rockets",
+          "A glowing keyboard with alien symbols",
+          "An alarm clock with boxing gloves",
+          "A magical paintbrush with wings",
+          "A sword made from candy",
+          "A backpack with octopus tentacles",
+          "A portable robot pet",
+          "A giant rubber duck wearing armor",
+          "A strange futuristic car with three wheels"
+        ],
+        "characters": [
+          "A ninja cat with two swords",
+          "A superhero whose power is spaghetti",
+          "A villain with a TV for a head",
+          "A tiny knight with an enormous shield",
+          "A robot with a jellyfish head",
+          "A pirate with a mechanical parrot",
+          "A cowboy duck with laser boots",
+          "A detective frog holding a magnifying glass",
+          "A skateboarder with a flaming helmet",
+          "A superhero wearing a traffic cone",
+          "A gummy bear gladiator",
+          "An alien wearing a human disguise",
+          "A superhero made entirely of clouds",
+          "A mischievous goblin with oversized ears",
+          "A vampire who looks like a rock star",
+          "A robot chef with six arms",
+          "A wizard with a pet miniature dragon",
+          "A superhero with a pizza shield",
+          "A cyborg skateboarder with rocket shoes",
+          "A pirate made of vegetables",
+          "A silly supervillain with a toilet-plunger staff",
+          "A ghost with a fashionable jacket",
+          "A masked wrestler with a donut head",
+          "A dinosaur detective",
+          "A magical girl with a star-shaped sword",
+          "A video game boss with four health bars",
+          "A knight made of cardboard",
+          "A sleepy zombie wearing pajamas",
+          "A cosmic cat with a starry tail",
+          "A pumpkin-headed trickster"
+        ],
+        "action": [
+          "A dinosaur dunking a basketball",
+          "A robot doing an epic skateboard trick",
+          "A frog performing a karate kick",
+          "An octopus juggling eight pizzas",
+          "A penguin throwing a snowball",
+          "A knight doing a dramatic backflip",
+          "A dragon blowing bubblegum bubbles",
+          "A shark playing electric guitar",
+          "A cat flying with a tiny jetpack",
+          "A giant robot arm wrestling a dinosaur",
+          "A wizard turning a potato into a frog",
+          "A raccoon celebrating with a trophy",
+          "A superhero stopping a falling sandwich",
+          "A chicken lifting a gigantic dumbbell",
+          "A pirate balancing on a skateboard",
+          "A jellyfish attempting to dance",
+          "A squirrel launching an acorn rocket",
+          "A ghost playing a trumpet",
+          "A bear trying to do a handstand",
+          "An alien winning a game of chess",
+          "A monster squeezing into a tiny hoodie",
+          "A vampire brushing its fangs",
+          "A robot chasing a runaway battery",
+          "A hamster spinning a giant wheel",
+          "A duck attempting a flying kick",
+          "A dragon trying to blow out birthday candles",
+          "A unicorn performing a magic trick",
+          "A frog riding a unicycle",
+          "A knight catching a flying pizza",
+          "A cat shooting rainbow lasers from its eyes"
+        ]
+      };
+      const CATEGORY_LABELS = {all:'MYSTERY MIX',silly:'FUNNY & ABSURD',animals:'ANIMALS & CREATURES',food:'FUN FOOD',fantasy:'FANTASY & SCI-FI',objects:'WEIRD OBJECTS',characters:'CHARACTER DESIGN',action:'ACTION POSES'};
+      const state = {stage:'lobby',mode:'ready',settings:null,round:1,remaining:90,timerId:null,endAt:0,scores:[0,0],used:[],prompt:'',prompts:[],gallery:[],art:[],animations:[],active:0,sound:true};
+      let localPromptDrafts=[null,null],localPromptSeat=0;
+      let audioCtx=null, toastTimer=null, saveTimer=null;
+      let online=null, onlineArtTimer=null, onlineFrameTimer=null, onlineClockTimer=null, animationPreviewTimer=null, animationFrameStep=0;
+      function notify(s) { const el=$('#toast'); el.textContent=s; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2500); }
+      function safeText(s, max=20) { return String(s||'').trim().slice(0,max); }
+      function icon(n) { return `<svg class="ic" aria-hidden="true"><use href="#${n}"/></svg>`; }
+      function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+      function setStage(stage) { state.stage=stage; $$('.screen').forEach(el=>el.hidden=el.id!==stage); try{window.scrollTo({top:0,behavior:'instant'});}catch(e){} }
+      function beep(f=440,d=.12) { if(!state.sound)return; try { audioCtx ||= new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); const osc=audioCtx.createOscillator(),g=audioCtx.createGain(); osc.type='sine'; osc.frequency.setValueAtTime(f,audioCtx.currentTime); g.gain.setValueAtTime(.045,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+d); osc.connect(g).connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime+d); }catch(e){} }
+      function updateSound() { $('#soundBtn').innerHTML=icon(state.sound?'ic-sound':'ic-muted'); $('#soundBtn').setAttribute('aria-label',state.sound?'Mute sounds':'Unmute sounds'); $('#soundBtn').title=state.sound?'Mute sounds':'Unmute sounds'; }
+      function rand(n) {return Math.floor(Math.random()*n);}
+      function choosePrompt() { let pool=state.settings.category==='all'?Object.values(PROMPTS).flat():(PROMPTS[state.settings.category]||Object.values(PROMPTS).flat()); let available=pool.filter(p=>!state.used.includes(p)); if(!available.length) { state.used=[]; available=pool; } const prompt=available[rand(available.length)]; state.used.push(prompt); return prompt; }
+      function getSettings(){return {names:[safeText($('#name0').value)||'Player 1',safeText($('#name1').value)||'Player 2'],duration:Number($('#duration').value),rounds:Number($('#rounds').value),category:$('#category').value,custom:safeText($('#customPrompt').value,90),maxPlayers:Number($('#maxPlayers').value),artMode:$('#artMode').value};}
+      function renderScores() {boards.forEach((b,i)=>{const name=state.settings.names[i]||`Player ${i+1}`;$('.name-text',b.root).textContent=name;$('.player-badge',b.root).textContent=i+1;$('.score-pill',b.root).textContent=`${state.scores[i]||0} ${(state.scores[i]||0)===1?'PT':'PTS'}`; b.canvas.setAttribute('aria-label',`${name} drawing canvas`);b.root.classList.toggle('animation-mode',state.settings.artMode==='animation');
+        const challenge=$('.canvas-challenge',b.root);const label=state.prompts?.[i];challenge.hidden=!label;challenge.textContent=label?'🎯 '+label:'';
+      });}
+      function ensureBoards(n){const holder=$('#boards');while(boards.length>n){const b=boards.pop();b.stopPreview();b.root.remove();}while(boards.length<n){const i=boards.length;const root=boards[0].root.cloneNode(true);root.id='board'+i;root.dataset.player=i;root.style.setProperty('--accent',['#ff7695','#ac8fff','#77dcef','#d8ff64','#ffb977','#88e4af','#f09bd8','#f8b1ff'][i]);root.classList.remove('online-mine','online-locked','in-focus');$('.animation-controls',root)?.remove();holder.append(root);boards.push(new Board(root,i));}holder.classList.remove('focused');}
+      function makeGroupScores(target,names,scores){target.innerHTML=names.map((name,i)=>`<div class="group-score"><span class="rank-number">#${i+1}</span><div class="score-name">${esc(name)}</div><strong class="score-num">${scores[i]||0}</strong><small>POINTS</small></div>`).join('');}
+      function showGroupScores(group){for(const section of ['result','final']){$(`#${section} .scoreboard`).hidden=group;$(`#${section}GroupScores`).hidden=!group;}}
+
+      function clearPromptForm(){for(let i=0;i<3;i++){const input=$('#challenge'+i);input.value='';input.disabled=false;}$('#promptSubmitBtn').disabled=false;$('#promptSubmitBtn').textContent='SUBMIT 3 PROMPTS →';$('#promptingStatus').textContent='';}
+      function readPromptForm(){const prompts=[0,1,2].map(i=>$('#challenge'+i).value.trim().replace(/\s+/g,' '));
+        if(prompts.some(x=>x.length<4||x.length>90))throw new Error('Each prompt must be between 4 and 90 characters.');
+        if(new Set(prompts.map(x=>x.toLocaleLowerCase())).size!==3)throw new Error('Make all three prompts different.');
+        return prompts;
+      }
+      function enterLocalPromptPhase(){
+        localPromptDrafts=[null,null];localPromptSeat=0;state.prompts=[];state.prompt='';
+        renderLocalPromptPhase(true);
+      }
+      function renderLocalPromptPhase(fresh=false){
+        if(fresh){clearPromptForm();if(state.round===1&&localPromptSeat===0&&state.settings.custom)$('#challenge0').value=state.settings.custom;}
+        $('#promptingTitle').textContent=`${state.settings.names[localPromptSeat]}, create 3 prompts`;
+        $('#promptingDescription').textContent=`Round ${state.round} of ${state.settings.rounds}. Write three drawing challenges for the other artist. Pass the device to ${state.settings.names[1-localPromptSeat]} after submitting.`;
+        $('#promptingCounter').textContent=`${localPromptSeat} / 2 artists submitted`;
+        $('#promptSubmitBtn').textContent='SUBMIT 3 PROMPTS →';
+        setStage('prompting');
+      }
+      function finishLocalPromptPhase(){
+        // With two artists, each is guaranteed to receive the other artist's prompt.
+        state.prompts=[localPromptDrafts[1][rand(3)],localPromptDrafts[0][rand(3)]];
+        state.prompt='Two unique player-made challenges';
+        state.mode='ready';state.remaining=state.settings.duration;
+        state.active=0;$('#boards').classList.remove('focused');
+        boards.forEach(b=>{b.root.classList.remove('in-focus');b.reset();});
+        renderBattle();setStage('battle');saveSoon();
+      }
+      function startGame(settings=getSettings()) { ensureBoards(2);showGroupScores(false);stopClock();state.settings=settings;state.round=1;state.scores=[0,0];state.used=[];state.gallery=[];state.remaining=settings.duration;state.mode='ready';state.active=0;enterLocalPromptPhase();try{localStorage.setItem(PREFS,JSON.stringify(settings));}catch(e){} }
+
+      function renderBattle() { $('#categoryLabel').title=state.settings.artMode==='animation'?'Flipbook animation battle':'Drawing battle'; $('#roundPill').textContent=`ROUND ${state.round} / ${state.settings.rounds}`; $('#categoryLabel').textContent=online?'PLAYER-WRITTEN CHALLENGE':'PLAYER-MADE PROMPTS'; $('#promptDisplay').textContent=state.prompt; renderScores(); renderTimer(); renderMode(); }
+      function renderTimer(){ const secs=Math.max(0,Math.ceil(state.remaining)); $('#timerDisplay').textContent=`${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`; $('#timerDisplay').classList.toggle('urgent',secs<=10&&state.mode==='drawing'); const pct=Math.min(100,(state.remaining/state.settings.duration)*100); $('#timeFill').style.width=`${pct}%`; $('#timeFill').classList.toggle('urgent',secs<=10); }
+      function renderMode(){ let label=state.mode==='drawing'?'Pause clock':state.mode==='paused'?'Resume clock':'Start drawing';
+        if(online && online.seat!==0)label='Host controls clock';
+        $('#startPauseBtn').innerHTML=icon(state.mode==='drawing'?'ic-pause':'ic-play')+`<span>${label}</span>`;
+        $('#startPauseBtn').disabled=Boolean(online && online.seat!==0);
+        $('#extraBtn').disabled=Boolean(online && online.seat!==0);
+        $('#judgeBtn').disabled=Boolean(online && online.seat!==0);
+        $('#newPromptBtn').hidden=Boolean(online)||Boolean(state.prompts?.length);$('#newPromptBtn').disabled=state.mode!=='ready'||Boolean(online)||Boolean(state.prompts?.length);
+        $('#timerCaption').textContent=state.mode==='ready'?'Ready when you are':state.mode==='paused'?'Clock paused':'TIME REMAINING';
+        boards.forEach(b=>{const cover=$('.canvas-cover',b.root); cover.hidden=state.mode==='drawing';
+          if(state.mode==='paused') cover.innerHTML='<div class="cover-inner"><strong>Paused ⏸</strong><small>Resume the clock to keep drawing.</small></div>';
+          else if(state.mode==='ready') cover.innerHTML='<div class="cover-inner"><strong>Get ready! ✏️</strong><small>The host will start the clock.</small></div>';}); }
+      function stopClock(){ if(state.timerId)clearInterval(state.timerId);state.timerId=null; }
+      function startClock(){ if(state.mode==='drawing')return; state.mode='drawing'; state.endAt=performance.now()+state.remaining*1000; let previous=Math.ceil(state.remaining); stopClock(); state.timerId=setInterval(()=>{if(state.mode!=='drawing')return; state.remaining=Math.max(0,(state.endAt-performance.now())/1000); const now=Math.ceil(state.remaining); if(now!==previous){ if([10,3,2,1].includes(now))beep(now===10?600:420,.095); previous=now; renderTimer();} if(state.remaining<=0){state.remaining=0;renderTimer();stopClock();beep(280,.35); openVoting();}},80); renderMode();beep(740,.09);saveSoon(); }
+      function pauseClock(){ if(state.mode!=='drawing')return;state.remaining=Math.max(0,(state.endAt-performance.now())/1000);state.mode='paused';stopClock();renderTimer();renderMode();saveSoon();}
+      function nextRound(){state.round++;state.remaining=state.settings.duration;state.mode='ready';state.active=0;enterLocalPromptPhase();}
+      function openVoting(){if(state.stage!=='battle')return;stopClock();state.mode='finished';state.animations=state.settings.artMode==='animation'?boards.map(b=>b.getFrames()):[];state.art=boards.map((b,i)=>state.animations[i]?.[0]||b.canvas.toDataURL('image/png'));state.settings.names.forEach((n,i)=>{ $(`#voteName${i}`).textContent=n; $(`#voteImg${i}`).src=state.art[i]; $(`#voteImg${i}`).alt=`${n}'s finished drawing`; $(`#voteBtn${i}`).textContent=`🏆 Vote for ${n}`; $(`#voteChallenge${i}`).textContent='🎯 '+(state.prompts?.[i]||state.prompt); });$('#votePrompt').textContent='two unique player-made prompts';for(let i=0;i<2;i++){if(state.settings.artMode==='animation')$(`#voteImg${i}`).dataset.animateSeat=i;else delete $(`#voteImg${i}`).dataset.animateSeat;}setStage('vote');startAnimationPreview(); saveSoon(); }
+      function recordVote(winner){const w=winner==='tie'?'tie':Number(winner);if(w==='tie'){state.scores[0]++;state.scores[1]++;}else if(w===0||w===1){state.scores[w]++;}else return;state.gallery.push({round:state.round,prompt:'Individual player challenges',prompts:state.prompts.slice(),winner:w,art:state.art.slice()});$('#resultRound').textContent=`Round ${state.round} of ${state.settings.rounds} complete`;$('#resultMedal').textContent=w==='tie'?'🤝':'🏆';$('#resultTitle').textContent=w==='tie'?"IT'S A TIE!":`${state.settings.names[w]} wins!`;$('#resultText').textContent=w==='tie'?'Two works of art. Two points well earned.':'What a masterpiece! The crowd has spoken.';for(let i=0;i<2;i++){ $(`#resultName${i}`).textContent=state.settings.names[i];$(`#resultScore${i}`).textContent=state.scores[i]; }$('#nextRoundBtn').innerHTML=state.round>=state.settings.rounds?'SEE THE CHAMPION →':'NEXT ROUND '+icon('ic-play');setStage('result');beep(660,.09);setTimeout(()=>beep(880,.13),110);saveSoon();}
+      function finishGame(){stopClock();const win=state.scores[0]===state.scores[1]?'tie':state.scores[0]>state.scores[1]?0:1;$('#finalCrown').textContent=win==='tie'?'🤝':'👑';$('#finalTitle').textContent=win==='tie'?'IT’S A DRAW!':`${state.settings.names[win]} wins!`;$('#finalSubtitle').textContent=win==='tie'?'An epic tie. Every artist deserves the crown!':`${state.settings.names[win]} is your Draw Duel champion!`;for(let i=0;i<2;i++){ $(`#finalName${i}`).textContent=state.settings.names[i];$(`#finalScore${i}`).textContent=state.scores[i]; }$('#recapList').innerHTML=state.gallery.map((g,j)=>`<article class="recap-item"><div class="recap-text"><div class="eyebrow">ROUND ${g.round}</div><div class="recap-prompt">${esc(g.prompts?.join(' / ')||g.prompt)}</div><div class="recap-winner">${g.winner==='tie'?'🤝 Tie':`🏆 ${esc(state.settings.names[g.winner])} won`}</div></div><a href="${g.art[0]}" download="round-${g.round}-${filename(state.settings.names[0])}.png" title="Save ${esc(state.settings.names[0])}'s art"><img src="${g.art[0]}" alt="${esc(state.settings.names[0])}'s round ${g.round} drawing"></a><a href="${g.art[1]}" download="round-${g.round}-${filename(state.settings.names[1])}.png" title="Save ${esc(state.settings.names[1])}'s art"><img src="${g.art[1]}" alt="${esc(state.settings.names[1])}'s round ${g.round} drawing"></a></article>`).join('');setStage('final');try{localStorage.removeItem(STORE);}catch(e){} updateResume();}
+      function filename(s){return String(s).toLowerCase().replace(/[^a-z0-9-_]+/g,'-').replace(/^-+|-+$/g,'')||'art';}
+      function triggerDownload(url,name){ const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();}
+      function exportArt(index) {const url=state.stage==='vote'?state.art[index]:boards[index].canvas.toDataURL('image/png');triggerDownload(url,`drawduel-round-${state.round}-${filename(state.settings.names[index])}.png`);notify('Artwork saved as PNG!');}
+      function copyResults(){const summary='🎨 DRAWDUEL RESULTS\n'+state.settings.names.map((n,i)=>`${n}: ${state.scores[i]} pts`).join('\n')+'\n'+state.gallery.map(g=>`Round ${g.round}: ${(g.prompts||[g.prompt]).join(' / ')} — ${g.winners?.length>1?'Tie':g.winner==='tie'?'Tie':state.settings.names[g.winner]}`).join('\n');if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(summary).then(()=>notify('Results copied!')).catch(()=>fallbackCopy(summary));}else fallbackCopy(summary);}
+      function fallbackCopy(txt){const t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.left='-1000px';document.body.appendChild(t);t.select();try{document.execCommand('copy');notify('Results copied!');}catch(e){notify('Copy unavailable in this browser');}t.remove();}
+      function packSave() {if(!state.settings || !['battle','vote','result'].includes(state.stage))return null;return {version:1,settings:state.settings,round:state.round,remaining:state.remaining,prompt:state.prompt,prompts:state.prompts,used:state.used,scores:state.scores,mode:state.mode,art:boards.map(b=>b.canvas.toDataURL('image/png'))};}
+      function saveSoon(){if(online)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>{const data=packSave();if(!data)return;try{localStorage.setItem(STORE,JSON.stringify(data));updateResume();}catch(e){}},700);}
+      function updateResume(){try{$('#resumeBtn').hidden=!localStorage.getItem(STORE);}catch(e){$('#resumeBtn').hidden=true;}}
+      function resume(){let s;try{s=JSON.parse(localStorage.getItem(STORE));}catch(e){}if(!s||s.version!==1||!s.settings){notify('No valid saved battle found');return;}stopClock();state.settings=s.settings;state.round=s.round||1;state.remaining=Math.max(1,Number(s.remaining)||s.settings.duration);state.prompt=s.prompt||'Your challenge';state.prompts=s.prompts||[s.prompt,s.prompt];state.used=s.used||[];state.scores=s.scores||[0,0];state.mode='paused';state.active=0;state.gallery=[];boards.forEach((b,i)=>{b.reset();if(s.art?.[i]){const im=new Image();im.onload=()=>{b.ctx.drawImage(im,0,0,b.canvas.width,b.canvas.height);b.undoStack=[];b.redoStack=[];b.updateUndoUI();};im.src=s.art[i];}});renderBattle();setStage('battle');notify('Battle restored! Resume the clock when ready.');}
+      function floodFill(ctx,x,y,color,opacity=1){
+        const w=ctx.canvas.width,h=ctx.canvas.height;
+        x=Math.floor(x);y=Math.floor(y);if(x<0||x>=w||y<0||y>=h)return false;
+        const image=ctx.getImageData(0,0,w,h),data=image.data;
+        const source=new Uint8ClampedArray(data);
+        const start=(y*w+x)*4,target=source.slice(start,start+4);
+        const fill=[parseInt(color.slice(1,3),16),parseInt(color.slice(3,5),16),parseInt(color.slice(5,7),16)];
+        const opacityValue=Math.max(0,Math.min(1,Number(opacity)||0));
+        if(!opacityValue)return false;
+        const delta=i=>Math.max(Math.abs(source[i]-target[0]),Math.abs(source[i+1]-target[1]),Math.abs(source[i+2]-target[2]));
+        if(delta(start)<2&&fill.every((v,c)=>Math.abs(v-target[c])<=2))return false;
+        const seen=new Uint8Array(w*h),inside=new Uint8Array(w*h),stack=[y*w+x],region=[];
+        while(stack.length){const at=stack.pop();if(seen[at])continue;seen[at]=1;
+          const i=at*4;if(delta(i)>28||Math.abs(source[i+3]-target[3])>30)continue;
+          region.push(at);inside[at]=1;
+          const px=at%w,py=(at-px)/w;
+          if(px>0&&!seen[at-1])stack.push(at-1);
+          if(px<w-1&&!seen[at+1])stack.push(at+1);
+          if(py>0&&!seen[at-w])stack.push(at-w);
+          if(py<h-1&&!seen[at+w])stack.push(at+w);
+        }
+        if(!region.length)return false;
+        const recolor=(idx,weight)=>{const i=idx*4,a=opacityValue*weight;
+          for(let c=0;c<3;c++)data[i+c]=Math.round(source[i+c]*(1-a)+fill[c]*a);
+        };
+        for(const at of region)recolor(at,1);
+        // Anti-alias correction: tint neighboring partial edge pixels using their estimated coverage.
+        // Fully dark outlines remain intact; the unwanted grey/black fringe around fills disappears.
+        const fringe=new Uint8Array(w*h);
+        for(const at of region){const px=at%w,py=(at-px)/w;
+          for(const near of [px>0?at-1:-1,px<w-1?at+1:-1,py>0?at-w:-1,py<h-1?at+w:-1]){
+            if(near<0||inside[near]||fringe[near])continue;fringe[near]=1;
+            const i=near*4,d=delta(i);
+            if(d>28&&d<210&&Math.abs(source[i+3]-target[3])<32){
+              const coverage=Math.pow(Math.max(0,1-d/235),0.9);
+              recolor(near,coverage);
+            }
+          }
+        }
+        ctx.putImageData(image,0,0);return true;
+      }
+      class Board {
+        constructor(root,index){this.root=root;this.index=index;this.canvas=$('canvas',root);this.ctx=this.canvas.getContext('2d',{willReadFrequently:true});this.tool='pen';this.color=COLORS[0];this.size=8;this.opacity=100;this.frames=[];this.frameIndex=0;this.previewTimer=null;this.frameLoadId=0;this.grid=false;this.filled=false;this.undoStack=[];this.redoStack=[];this.down=false;this.last=null;this.origin=null;this.preview=null;this.setupTools();this.bindCanvas();this.reset();}
+        setupTools(){const tools=$('.tools',this.root);tools.innerHTML=TOOLS.map(([id,label,icon,key])=>`<button class="tool-btn" data-tool="${id}" type="button" aria-label="${label}" title="${label} (${key})" aria-pressed="false">${window.document?`<svg class="ic"><use href="#${icon}"/></svg>`:''}</button>`).join('');tools.addEventListener('click',e=>{let btn=e.target.closest('[data-tool]');if(btn)this.chooseTool(btn.dataset.tool);});const palette=$('.palette',this.root);palette.innerHTML=COLORS.map((c,i)=>`<button class="color-swatch" type="button" style="--swatch:${c}" data-color="${c}" title="Color ${i+1}" aria-label="Select color ${c}"></button>`).join('')+'<input class="custom-color" type="color" aria-label="Custom color" title="Pick any color" value="#24243a">';palette.addEventListener('click',e=>{const sw=e.target.closest('[data-color]');if(sw)this.chooseColor(sw.dataset.color);});$('.custom-color',this.root).addEventListener('input',e=>this.chooseColor(e.target.value));$('.brush-size',this.root).addEventListener('input',e=>this.setSize(Number(e.target.value)));$('.brush-opacity',this.root).addEventListener('input',e=>this.setOpacity(Number(e.target.value)));$('.undo',this.root).addEventListener('click',()=>this.undo());$('.redo',this.root).addEventListener('click',()=>this.redo());$('.grid-toggle',this.root).addEventListener('click',()=>{this.grid=!this.grid;$('.grid-overlay',this.root).hidden=!this.grid;$('.grid-toggle',this.root).setAttribute('aria-pressed',this.grid);});$('.fill-toggle',this.root).addEventListener('click',()=>{this.filled=!this.filled;$('.fill-toggle',this.root).setAttribute('aria-pressed',this.filled);notify(this.filled?'Shapes will be filled':'Shapes will be outlines');});$('.clear',this.root).addEventListener('click',()=>{if(state.stage!=='battle'||state.mode!=='drawing'){notify('Start the round before editing');return;}if(!confirm(`Clear ${state.settings.names[this.index]}'s drawing? You can undo this.`))return;this.saveUndo();this.paintBlank();saveSoon();onlineArtUpdate(this.index,true);syncAnimationFrames(this.index);});$('.download',this.root).addEventListener('click',()=>exportArt(this.index));$('.focus-btn',this.root).addEventListener('click',()=>{const holder=$('#boards'),focused=holder.classList.contains('focused')&&this.root.classList.contains('in-focus');holder.classList.toggle('focused',!focused);$$('.player-board',holder).forEach(b=>b.classList.remove('in-focus'));if(!focused)this.root.classList.add('in-focus');$('.focus-btn',this.root).title=focused?'Focus this canvas':'Show both canvases';});this.setupAnimationTools();this.chooseTool('pen');this.chooseColor(this.color);this.updateUndoUI();}
+        setupAnimationTools(){let controls=$('.animation-controls',this.root);if(!controls){controls=document.createElement('div');controls.className='animation-controls';controls.innerHTML=`<div class="frame-heading"><span>🎞️ FLIPBOOK ANIMATION</span><strong class="frame-count">FRAME 1 / 1</strong></div><div class="frame-actions"><button class="mini" data-frame="prev" title="Previous frame">← Prev</button><button class="mini" data-frame="next" title="Next frame">Next →</button><button class="mini" data-frame="duplicate">＋ Duplicate</button><button class="mini" data-frame="blank">＋ Blank</button><button class="mini" data-frame="delete">Delete</button><button class="mini" data-frame="play">▶ Preview</button><button class="mini" data-frame="export">↓ WebM</button></div><div class="frame-hint">Move objects slightly between frames to animate them. Up to 12 frames · 4 FPS</div>`;this.root.append(controls);}controls.addEventListener('click',e=>{const btn=e.target.closest('[data-frame]');if(!btn)return;const action=btn.dataset.frame;if(action==='play')return this.togglePreview();if(action==='export')return this.exportAnimation();if(!this.canDraw())return;if(action==='prev')this.changeFrame(this.frameIndex-1);if(action==='next')this.changeFrame(this.frameIndex+1);if(action==='duplicate')this.addFrame(true);if(action==='blank')this.addFrame(false);if(action==='delete')this.deleteFrame();});}
+        saveFrame(){if(this.previewTimer)return;this.frames[this.frameIndex]=this.canvas.toDataURL('image/webp',.72);}
+        getFrames(){this.saveFrame();return this.frames.filter(Boolean);}
+        updateAnimationUI(){const count=this.frames.length;$('.frame-count',this.root).textContent=`FRAME ${this.frameIndex+1} / ${count}`;for(const btn of $$('[data-frame]',this.root)){const a=btn.dataset.frame;if(a==='prev')btn.disabled=this.frameIndex===0;if(a==='next')btn.disabled=this.frameIndex>=count-1;if(a==='delete')btn.disabled=count<=1;if(a==='duplicate'||a==='blank')btn.disabled=count>=12;}const play=$('[data-frame="play"]',this.root);play.textContent=this.previewTimer?'■ Stop':'▶ Preview';}
+        loadFrame(frame){const seq=++this.frameLoadId,im=new Image();im.onload=()=>{if(seq!==this.frameLoadId)return;this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);this.ctx.drawImage(im,0,0,this.canvas.width,this.canvas.height);};im.src=this.frames[frame];}
+        changeFrame(n){if(this.previewTimer||n<0||n>=this.frames.length||n===this.frameIndex)return;this.saveFrame();this.frameIndex=n;this.loadFrame(n);this.undoStack=[];this.redoStack=[];this.updateUndoUI();this.updateAnimationUI();syncAnimationFrames(this.index);}
+        addFrame(duplicate){if(this.frames.length>=12){notify('12 frames maximum');return;}this.saveFrame();const at=this.frameIndex+1;const copy=duplicate?this.frames[this.frameIndex]:null;this.frames.splice(at,0,copy||this.whiteFrame());this.frameIndex=at;this.loadFrame(at);this.undoStack=[];this.redoStack=[];this.updateUndoUI();this.updateAnimationUI();syncAnimationFrames(this.index);}
+        whiteFrame(){const temp=document.createElement('canvas');temp.width=this.canvas.width;temp.height=this.canvas.height;const cx=temp.getContext('2d');cx.fillStyle='white';cx.fillRect(0,0,temp.width,temp.height);return temp.toDataURL('image/webp',.72);}
+        deleteFrame(){if(this.frames.length<=1)return;this.frames.splice(this.frameIndex,1);this.frameIndex=Math.min(this.frameIndex,this.frames.length-1);this.loadFrame(this.frameIndex);this.updateAnimationUI();syncAnimationFrames(this.index);}
+        stopPreview(){if(this.previewTimer){clearInterval(this.previewTimer);this.previewTimer=null;this.loadFrame(this.frameIndex);}this.updateAnimationUI?.();}
+        togglePreview(){if(this.previewTimer){this.stopPreview();return;}if(this.frames.length<2){notify('Add another frame to preview your animation!');return;}this.saveFrame();let cursor=0;this.previewTimer=setInterval(()=>{const im=new Image(),seq=++this.frameLoadId;im.onload=()=>{if(!this.previewTimer||this.frameLoadId!==seq)return;this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);this.ctx.drawImage(im,0,0,this.canvas.width,this.canvas.height);};im.src=this.frames[cursor++%this.frames.length];},250);this.updateAnimationUI();}
+        async exportAnimation(){if(!this.frames.length)return;this.saveFrame();if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){notify('WebM export is not supported in this browser.');return;}const temp=document.createElement('canvas');temp.width=900;temp.height=560;const ctx=temp.getContext('2d');const stream=temp.captureStream(4),chunks=[];let recorder;try{recorder=new MediaRecorder(stream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm'});}catch(e){notify('Video export is not available in this browser');return;}recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};recorder.onstop=()=>{triggerDownload(URL.createObjectURL(new Blob(chunks,{type:'video/webm'})),`drawduel-${filename(state.settings.names[this.index])}-round-${state.round}.webm`);stream.getTracks().forEach(t=>t.stop());notify('Animation downloaded!');};recorder.start();for(const frame of this.frames){const im=new Image();await new Promise(resolve=>{im.onload=resolve;im.onerror=resolve;im.src=frame;});ctx.fillStyle='white';ctx.fillRect(0,0,900,560);if(im.complete&&im.naturalWidth)ctx.drawImage(im,0,0,900,560);await new Promise(resolve=>setTimeout(resolve,250));}recorder.stop();}
+        
+        reset(){if(this.previewTimer){clearInterval(this.previewTimer);this.previewTimer=null;}this.frameLoadId++;this.paintBlank();this.frameIndex=0;this.frames=[this.canvas.toDataURL('image/webp',.72)];this.updateAnimationUI();this.undoStack=[];this.redoStack=[];this.down=false;this.preview=null;this.updateUndoUI();}
+        paintBlank(){this.ctx.save();this.ctx.globalAlpha=1;this.ctx.globalCompositeOperation='source-over';this.ctx.fillStyle='#ffffff';this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);this.ctx.restore();}
+        chooseTool(tool){this.tool=tool;$$('[data-tool]',this.root).forEach(b=>{const on=b.dataset.tool===tool;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on);});$('.tool-name',this.root).textContent='✎ '+(TOOLS.find(t=>t[0]===tool)?.[1]||'Pencil');this.canvas.style.cursor=tool==='text'?'text':tool==='picker'?'copy':'crosshair';state.active=this.index;}
+        chooseColor(color){this.color=color;$$('[data-color]',this.root).forEach(b=>b.classList.toggle('selected',b.dataset.color.toLowerCase()===color.toLowerCase()));$('.custom-color',this.root).value=color;}
+        setSize(v){this.size=Math.min(48,Math.max(2,v));$('.brush-size',this.root).value=this.size;$('.size-value',this.root).textContent=this.size;}
+        setOpacity(v){this.opacity=Math.min(100,Math.max(1,v));$('.brush-opacity',this.root).value=this.opacity;$('.opacity-value',this.root).textContent=this.opacity+'%';}
+        updateUndoUI(){$('.undo',this.root).disabled=!this.undoStack.length;$('.redo',this.root).disabled=!this.redoStack.length;}
+        snapshot(){return this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height);}
+        saveUndo(){this.undoStack.push(this.snapshot());if(this.undoStack.length>25)this.undoStack.shift();this.redoStack=[];this.updateUndoUI();}
+        undo(){if(state.stage!=='battle'||state.mode!=='drawing')return;if(!this.undoStack.length)return;this.redoStack.push(this.snapshot());this.ctx.putImageData(this.undoStack.pop(),0,0);this.updateUndoUI();saveSoon();onlineArtUpdate(this.index,true);syncAnimationFrames(this.index);}
+        redo(){if(state.stage!=='battle'||state.mode!=='drawing')return;if(!this.redoStack.length)return;this.undoStack.push(this.snapshot());this.ctx.putImageData(this.redoStack.pop(),0,0);this.updateUndoUI();saveSoon();onlineArtUpdate(this.index,true);syncAnimationFrames(this.index);}
+        point(e){const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*this.canvas.width/r.width,y:(e.clientY-r.top)*this.canvas.height/r.height};}
+        bindCanvas(){this.canvas.addEventListener('pointerdown',e=>this.pointerDown(e));this.canvas.addEventListener('pointermove',e=>this.pointerMove(e));this.canvas.addEventListener('pointerup',e=>this.pointerUp(e));this.canvas.addEventListener('pointercancel',e=>this.pointerUp(e));this.canvas.addEventListener('lostpointercapture',e=>{if(this.down)this.pointerUp(e);});this.canvas.addEventListener('contextmenu',e=>e.preventDefault());}
+        canDraw(){return state.stage==='battle'&&state.mode==='drawing'&&!this.previewTimer&&(!online||online.seat===this.index);}
+        pointerDown(e){if(!this.canDraw()||this.down||e.button===2)return;state.active=this.index;e.preventDefault();const p=this.point(e);if(this.tool==='picker'){const data=this.ctx.getImageData(Math.max(0,Math.min(899,Math.floor(p.x))),Math.max(0,Math.min(559,Math.floor(p.y))),1,1).data;this.chooseColor('#'+[data[0],data[1],data[2]].map(n=>n.toString(16).padStart(2,'0')).join(''));notify('Color picked!');return;}if(this.tool==='text'){const txt=prompt('Type the text to add to your drawing (max 80 characters):');if(!txt)return;this.saveUndo();this.ctx.save();this.ctx.globalAlpha=this.opacity/100;this.ctx.fillStyle=this.color;this.ctx.textBaseline='top';this.ctx.font=`900 ${Math.max(19,this.size*4)}px ui-sans-serif, system-ui, sans-serif`;this.ctx.fillText(txt.slice(0,80),p.x,p.y,this.canvas.width-p.x);this.ctx.restore();saveSoon();onlineArtUpdate(this.index,true);syncAnimationFrames(this.index);return;}if(this.tool==='fill'){this.saveUndo();if(!floodFill(this.ctx,p.x,p.y,this.color,this.opacity/100)){this.undoStack.pop();this.updateUndoUI();}saveSoon();onlineArtUpdate(this.index,true);syncAnimationFrames(this.index);return;}this.saveUndo();this.down=true;this.origin=p;this.last=p;this.preview=['line','rect','ellipse'].includes(this.tool)?this.snapshot():null;try{this.canvas.setPointerCapture(e.pointerId);}catch(e){}if(['pen','marker','eraser'].includes(this.tool))this.stroke(p,p);else if(this.tool==='spray')this.sprayAt(p);}
+        pointerMove(e){if(!this.down)return;if(!this.canDraw()){this.down=false;return;}e.preventDefault();const p=this.point(e);if(['pen','marker','eraser'].includes(this.tool))this.stroke(this.last,p);else if(this.tool==='spray')this.sprayAt(p);else if(this.preview){this.ctx.putImageData(this.preview,0,0);this.shape(this.origin,p);}this.last=p;onlineArtUpdate(this.index);}
+        pointerUp(e){if(!this.down)return;const p=(typeof e.clientX==='number')?this.point(e):this.last;if(this.canDraw()&&this.preview){this.ctx.putImageData(this.preview,0,0);this.shape(this.origin,p);}this.down=false;this.preview=null;this.origin=null;this.last=null;saveSoon();onlineArtUpdate(this.index,true);syncAnimationFrames(this.index);}
+        stroke(a,b){const ctx=this.ctx;ctx.save();ctx.globalAlpha=(this.tool==='marker'?.3:1)*this.opacity/100;ctx.strokeStyle=this.tool==='eraser'?'#ffffff':this.color;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=this.size*(this.tool==='marker'?2.5:this.tool==='eraser'?2:1);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();if(a.x===b.x&&a.y===b.y){ctx.beginPath();ctx.arc(a.x,a.y,ctx.lineWidth/2,0,Math.PI*2);ctx.fill();}ctx.restore();}
+        sprayAt(p){const ctx=this.ctx;ctx.save();ctx.fillStyle=this.color;ctx.globalAlpha=.55*this.opacity/100;const radius=this.size*2.1;for(let i=0;i<Math.max(12,this.size*4);i++){let r=Math.sqrt(Math.random())*radius,angle=Math.random()*Math.PI*2,x=p.x+Math.cos(angle)*r,y=p.y+Math.sin(angle)*r;ctx.fillRect(x,y,Math.max(1,this.size/8),Math.max(1,this.size/8));}ctx.restore();}
+        shape(a,b){const ctx=this.ctx;ctx.save();ctx.globalAlpha=this.opacity/100;ctx.lineWidth=this.size;ctx.strokeStyle=this.color;ctx.fillStyle=this.color;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();if(this.tool==='line'){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}else if(this.tool==='rect'){ctx.rect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));}else if(this.tool==='ellipse'){const rx=Math.max(.1,Math.abs(b.x-a.x)/2),ry=Math.max(.1,Math.abs(b.y-a.y)/2);ctx.ellipse((a.x+b.x)/2,(a.y+b.y)/2,rx,ry,0,0,Math.PI*2);}if(this.filled&&this.tool!=='line')ctx.fill();else ctx.stroke();ctx.restore();}
+      }
+      let boards=[new Board($('#board0'),0),new Board($('#board1'),1)];
+      // Online mode: a small HTTP + Server-Sent Events protocol (same-origin, no account).
+      const request = async (route, payload) => {
+        let response;
+        try{response=await fetch('/api/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}
+        catch(e){throw new Error('Cannot reach the game server. Open the hosted website, not the downloaded HTML file.');}
+        let result;try{result=await response.json();}catch(e){throw new Error('Game server sent an unexpected response.');}
+        if(!response.ok)throw new Error(result.error||'Online request failed.');
+        return result;
+      };
+      const onlineSend=async (action, extra={})=> {
+        if(!online)return;
+        return request('action',{code:online.code,token:online.token,action,...extra});
+      };
+      function onlineAction(action,extra={}) { onlineSend(action,extra).catch(e=>notify(e.message)); }
+      function onlineInvite(){return location.origin+location.pathname+'?room='+encodeURIComponent(online.code);}
+      function onlineCopy(what='link') {if(!online)return;const text=what==='code'?online.code:onlineInvite();
+        if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>notify(what==='code'?'Room code copied!':'Invite link copied!')).catch(()=>fallbackCopy(text));}
+        else fallbackCopy(text); }
+      function leaveOnline(){if(!online)return;clearTimeout(onlineArtTimer);if(onlineClockTimer)clearInterval(onlineClockTimer);onlineClockTimer=null;
+        const previous=online;online=null;previous.source?.close();ensureBoards(2);showGroupScores(false);$('#boards').classList.remove('multiplayer','private-studio');$('#onlineVoteGrid').hidden=true;$('#onlineVoteGrid').dataset.round='';$('#onlineVoteGrid').innerHTML='';$('#localVoteGrid').hidden=false;$('#vote .section-sub').lastChild.textContent='. Who drew it better? Choose a winner or call it a tie.';$('#revealVotesBtn').hidden=true;$('.tie-btn').hidden=false;$('#roomBanner').hidden=true;$('#voteRules').textContent='Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.';
+        boards.forEach(b=>b.root.classList.remove('online-locked','online-mine'));$$('[data-vote]').forEach(b=>b.disabled=false);
+        $('#rematchBtn').disabled=false;$('#nextRoundBtn').disabled=false;$$('[data-vote]').forEach(b=>b.disabled=false);setStage('lobby');notify('Left online room.');}
+      async function connectOnline(mode){
+        if(location.protocol!=='http:'&&location.protocol!=='https:'){notify('For online play, start the Node server and open its website address.');return;}
+        const button=$(mode==='create'?'#createOnlineBtn':'#joinOnlineBtn');if(button.disabled)return;
+        button.disabled=true;
+        try{
+          if(online)leaveOnline();
+          const data=mode==='create'
+            ? await request('create',{name:safeText($('#name0').value)||'Player 1',settings:getSettings()})
+            : await request('join',{code:safeText($('#joinCode').value,6).toUpperCase(),name:safeText($('#joinName').value)||'Player 2',token:localStorage.getItem('drawduel-token-'+safeText($('#joinCode').value,6).toUpperCase())||''});
+          online={...data,source:null,lastStage:null,lastRound:0,receivedArt:[],artBusy:false,artPending:false,frameBusy:false,framePending:false};
+          try{localStorage.setItem('drawduel-token-'+online.code,online.token);}catch(e){}
+          $('#waitingCode').textContent=online.code;setStage('waiting');
+          online.source=new EventSource('/api/events?code='+encodeURIComponent(online.code)+'&token='+encodeURIComponent(online.token));
+          online.source.addEventListener('state',e=>{if(!online)return;try{syncOnlineState(JSON.parse(e.data));}catch(err){console.error('Sync error',err);notify('Could not sync the game: '+err.message);}});
+          online.source.onerror=()=>{if(online)notify('Connection interrupted. Reconnecting…');};
+          notify(mode==='create'?'Online room created!':'Joined the online room!');
+        }catch(e){notify(e.message);$('#networkNotice').textContent=e.message;}
+        finally{button.disabled=false;}
+      }
+      function showRemoteArt(seat,image){if(!online||seat===online.seat||seat<0||seat>=boards.length||!image)return;
+        const who=online,board=boards[seat],im=new Image(),round=state.round,seq=who.receivedArt[seat]=(who.receivedArt[seat]||0)+1;
+        im.onload=()=>{if(online===who&&who.receivedArt[seat]===seq&&state.round===round&&state.stage==='battle'){
+          board.ctx.clearRect(0,0,board.canvas.width,board.canvas.height);board.ctx.drawImage(im,0,0,board.canvas.width,board.canvas.height);}};
+        im.src=image;
+      }
+      function restoreOnlineBoard(seat,image){const b=boards[seat];b.reset();if(!image)return;const who=online,im=new Image(),round=state.round,seq=who.receivedArt[seat]=(who.receivedArt[seat]||0)+1;
+        im.onload=()=>{if(online===who&&who.receivedArt[seat]===seq&&state.round===round&&state.stage==='battle')b.ctx.drawImage(im,0,0,b.canvas.width,b.canvas.height);};im.src=image;}
+      function onlineArtUpdate(index,immediate=false){if(!online||index!==online.seat||state.stage!=='battle'||state.mode!=='drawing')return;
+        if(onlineArtTimer && !immediate)return; // throttle during continuous movement, don't debounce it
+        if(onlineArtTimer)clearTimeout(onlineArtTimer);
+        onlineArtTimer=setTimeout(async()=>{onlineArtTimer=null;if(!online||state.mode!=='drawing'||state.stage!=='battle')return;
+          const who=online;
+          if(who.artBusy){who.artPending=true;return;}
+          who.artBusy=true;const round=state.round,image=boards[index].canvas.toDataURL('image/webp',.82);
+          try{await request('art',{code:who.code,token:who.token,round,image});}
+          catch(e){if(online===who&&e.message!=='Drawing is locked.')console.warn('Art sync failed',e.message);}
+          finally{who.artBusy=false;if(online===who&&who.artPending){who.artPending=false;onlineArtUpdate(index,true);}}
+        },immediate?0:190);
+      }
+      // A short celebratory finish animation (works with reduced-motion preferences).
+      function celebrate(){if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+        document.querySelector('.confetti-layer')?.remove();const layer=document.createElement('div');layer.className='confetti-layer';document.body.append(layer);
+        const palette=['#d8ff64','#ac8fff','#ff7695','#77dcef','#ffb977'];
+        for(let i=0;i<64;i++){const piece=document.createElement('span');piece.className='confetti-piece';piece.style.left=(Math.random()*100)+'%';piece.style.background=palette[i%palette.length];piece.style.animationDelay=(Math.random()*.45)+'s';piece.style.animationDuration=(2.1+Math.random()*.8)+'s';layer.append(piece);}
+        setTimeout(()=>layer.remove(),3800);
+      }
+      // Thumbnail preview for flipbook drawings in the voting gallery.
+      function startAnimationPreview(){if(animationPreviewTimer)return;
+        animationPreviewTimer=setInterval(()=>{
+          if(state.stage!=='vote'||state.settings?.artMode!=='animation')return;
+          animationFrameStep++;
+          document.querySelectorAll('[data-animate-seat]').forEach(img=>{
+            const seat=Number(img.dataset.animateSeat),frames=state.animations?.[seat];
+            if(frames?.length>1){const frame=frames[animationFrameStep%frames.length];if(img.src!==frame)img.src=frame;}
+          });
+        },250);
+      }
+      function syncAnimationFrames(index,immediate=false){
+        if(state.settings?.artMode!=='animation'||!online||index!==online.seat||!['battle','vote'].includes(state.stage))return;
+        clearTimeout(onlineFrameTimer);
+        onlineFrameTimer=setTimeout(()=>sendAnimationFrames(index),immediate?0:420);
+      }
+      async function sendAnimationFrames(index){
+        if(!online||state.settings?.artMode!=='animation'||index!==online.seat||!['battle','vote'].includes(state.stage))return;
+        const who=online;if(who.frameBusy){who.framePending=true;return;}
+        who.frameBusy=true;
+        const frames=boards[index].getFrames();
+        // Downsample frames for fast room sync and low mobile bandwidth.
+        const preview=document.createElement('canvas');preview.width=450;preview.height=280;
+        const cx=preview.getContext('2d');const encoded=[];
+        for(const frame of frames){const im=new Image();await new Promise(resolve=>{im.onload=resolve;im.onerror=resolve;im.src=frame;});
+          cx.fillStyle='white';cx.fillRect(0,0,450,280);
+          if(im.complete&&im.naturalWidth)cx.drawImage(im,0,0,450,280);
+          encoded.push(preview.toDataURL('image/webp',.55));
+        }
+        try{await request('frames',{code:who.code,token:who.token,round:state.round,frames:encoded});}
+        catch(e){if(online===who&&e.message!=='Animation is locked.'&&e.message!=='Voting is underway.')console.warn('Frame sync failed',e.message);}
+        finally{who.frameBusy=false;if(online===who&&who.framePending){who.framePending=false;syncAnimationFrames(index,true);}}
+      }
+      async function finishOnlineRound(){if(!online)return;
+        if(state.settings.artMode==='animation'){clearTimeout(onlineFrameTimer);await sendAnimationFrames(online.seat);}
+        onlineAction('finish');
+      }
+      function prepareOnlineVote(s){
+        state.animations=s.animations||[];
+        state.art=s.art.map((a,i)=>a||boards[i]?.canvas.toDataURL('image/png')||'');
+        $('#localVoteGrid').hidden=true;$('#onlineVoteGrid').hidden=false;$('.tie-btn').hidden=true;$('#vote .section-sub').lastChild.textContent=' — each artist drew a different challenge. Choose your favorite!';
+        $('#votePrompt').textContent='different player-written prompts';
+        const grid=$('#onlineVoteGrid');
+        if(grid.dataset.round!==String(s.round)||grid.children.length!==s.players.length){
+          grid.dataset.round=String(s.round);
+          grid.innerHTML=s.players.map((p,i)=>`<article class="art-card"><div class="art-name"><span>${esc(p.name)}</span><span class="index">ART #${i+1}</span></div><div class="art-assignment">🎯 ${esc(s.prompts?.[i]||'Mystery prompt')} ${Number.isInteger(s.authors?.[i])?`<small>· written by ${esc(s.settings.names[s.authors[i]])}</small>`:''}</div><img data-online-seat="${i}" ${state.settings.artMode==='animation'?`data-animate-seat="${i}"`:''} alt="${esc(p.name)} artwork" src="${state.art[i]||''}"><button class="vote-btn" data-group-vote="${i}">🏆 Vote for ${esc(p.name)}</button><button class="mini" data-group-save="${i}" style="margin-top:10px">↓ Save artwork</button>${state.settings.artMode==='animation'?'<div class="animation-badge">🎞️ Animated flipbook · 4 FPS</div>':''}</article>`).join('');
+        }
+        $$('[data-online-seat]',grid).forEach(img=>{const i=Number(img.dataset.onlineSeat);if(img.getAttribute('src')!==state.art[i])img.src=state.art[i]||'';});
+        $$('[data-group-vote]',grid).forEach(btn=>btn.disabled=s.voted);
+        $('#voteRules').textContent=s.voted?`Vote recorded (${s.votesCast}/${s.players.length}). Waiting for other artists.`:`Vote for your favorite! Most votes wins; tied leaders share the point. ${s.votesCast}/${s.players.length} votes submitted.`;
+        $('#revealVotesBtn').hidden=online.seat!==0;
+        $('#revealVotesBtn').disabled=s.votesCast<1;
+        startAnimationPreview();
+      }
+      function finishOnlineGame(s){
+        const top=Math.max(...s.scores),winners=s.scores.flatMap((n,i)=>n===top?[i]:[]);
+        $('#finalCrown').textContent=winners.length===1?'👑':'🤝';
+        $('#finalTitle').textContent=winners.length===1?`${s.settings.names[winners[0]]} WINS!`:'THE CHAMPIONS TIE!';
+        $('#finalSubtitle').textContent=winners.length===1?`${s.settings.names[winners[0]]} is your Draw Duel champion!`:`${winners.map(i=>s.settings.names[i]).join(' & ')} share the crown!`;
+        showGroupScores(true);makeGroupScores($('#finalGroupScores'),s.settings.names,s.scores);
+        $('#recapList').innerHTML=(s.gallery||[]).map(g=>`<article class="recap-item group-recap"><div class="recap-text"><div class="eyebrow">ROUND ${g.round}</div><div class="recap-prompt">${esc(g.prompts?.join(' / ')||g.prompt)}</div><div class="recap-winner">${g.winners?.length===1?'🏆 '+esc(s.settings.names[g.winners[0]]):'🤝 Shared win'}</div></div><div class="recap-artworks">${g.art.map((art,i)=>art?`<a href="${art}" download="round-${g.round}-${filename(s.settings.names[i])}.png" title="Save ${esc(s.settings.names[i])}'s artwork"><img src="${art}" alt="${esc(s.settings.names[i])} artwork"></a>`:'').join('')}</div></article>`).join('');
+        $('#rematchBtn').disabled=online.seat!==0;
+        $('#rematchBtn').textContent=online.seat===0?'⚡ PLAY AGAIN':'Waiting for host';
+        setStage('final');
+      }
+      function syncOnlineState(s){if(!online||s.code!==online.code)return;
+        const previousStage=online.lastStage,previousRound=online.lastRound;
+        state.settings=s.settings;state.round=s.round;state.prompt=s.prompt;state.prompts=s.stage==='battle'?s.players.map((_,i)=>i===online.seat?s.prompt:''):s.prompts||[];state.scores=s.scores;state.gallery=s.gallery;
+        state.mode=s.mode;state.remaining=(s.mode==='drawing'?Math.max(0,s.endAt-Date.now()):s.remainingMs)/1000;
+        if(s.stage==='waiting'){
+          $('#waitingCode').textContent=s.code;
+          $('#waitingPlayers').innerHTML=Array.from({length:s.maxPlayers},(_,i)=>{
+            const p=s.players[i];return `<div class="waiting-player ${p?.online?'online':''}">${p?(p.online?'🟢 ':'⚪ ')+esc(p.name):'⏳ Open spot #'+(i+1)}</div>`;
+          }).join('');
+          const ready=s.players.length>=2&&s.players.every(p=>p?.online);
+          $('#beginOnlineBtn').disabled=online.seat!==0||!ready;
+          $('#beginOnlineBtn').textContent=online.seat===0?`START WITH ${s.players.length} ARTISTS →`:'WAITING FOR HOST TO START';
+          $('#waitingHint').textContent=ready?(online.seat===0?`${s.players.length}/${s.maxPlayers} artists joined. Invite more or start now!`:'Everyone is ready! Waiting for the host.'):`${s.players.length}/${s.maxPlayers} artists joined. Need at least two connected artists.`;
+          setStage('waiting');
+        }else if(s.stage==='prompting'){
+          const fresh=previousStage!=='prompting'||previousRound!==s.round;
+          if(fresh){clearPromptForm();if(s.round===1&&online.seat===0&&s.settings.custom)$('#challenge0').value=s.settings.custom;}
+          $('#promptingTitle').textContent=`Round ${s.round}: create 3 prompts`;
+          $('#promptingDescription').textContent=`Write three creative challenges for other players. You'll receive one random prompt submitted by someone else, never your own.`;
+          $('#promptingCounter').textContent=`${s.promptsSubmitted} / ${s.players.length} artists submitted`;
+          if(s.submitted){
+            s.myPrompts.forEach((prompt,i)=>{$('#challenge'+i).value=prompt;});
+            for(let i=0;i<3;i++)$('#challenge'+i).disabled=true;
+            $('#promptSubmitBtn').disabled=true;
+            $('#promptSubmitBtn').textContent='✓ PROMPTS SUBMITTED';
+            $('#promptingStatus').textContent=`Your prompts are in! Waiting for ${s.players.length-s.promptsSubmitted} more artist(s)…`;
+          }else{
+            for(let i=0;i<3;i++)$('#challenge'+i).disabled=false;
+            $('#promptSubmitBtn').disabled=false;
+            $('#promptSubmitBtn').textContent='SUBMIT 3 PROMPTS →';
+            $('#promptingStatus').textContent='Only your three prompts are visible to you until the round starts.';
+          }
+          setStage('prompting');
+        }else if(s.stage==='battle'){
+          const reset=previousRound!==s.round||previousStage!=='battle';
+          if(reset){ensureBoards(s.players.length);boards.forEach((b,i)=>restoreOnlineBoard(i,i===online.seat?s.art[i]:null));}
+          state.active=online.seat;
+          $('#boards').classList.add('multiplayer','private-studio');
+          $('#roomBanner').hidden=false;
+          $('#roomBannerText').textContent=`🌐 ROOM ${online.code} · YOU: ${s.settings.names[online.seat]} · ${s.players.filter(p=>p.online).length}/${s.players.length} CONNECTED · ${s.settings.artMode==='animation'?'🎞️ FLIPBOOK':'🎨 DRAW'} · 🔒 PRIVATE DRAWING · ALL ART REVEALED AT VOTING · YOUR PROMPT FROM ${s.settings.names[s.promptAuthor]||'ANOTHER ARTIST'}`;
+          boards.forEach((b,i)=>{b.root.classList.toggle('online-mine',online.seat===i);b.root.classList.toggle('online-locked',online.seat!==i);});
+          renderBattle();setStage('battle');
+          if(!onlineClockTimer)onlineClockTimer=setInterval(()=>{if(!online||state.stage!=='battle'||state.mode!=='drawing')return;state.remaining=Math.max(0,(online.endAt-Date.now())/1000);renderTimer();},100);
+          online.endAt=s.endAt;
+          // Publish an initial blank frame, ensuring animations appear when time runs out.
+          if(reset && s.settings.artMode==='animation')syncAnimationFrames(online.seat);
+        }else if(s.stage==='vote'){
+          stopClock();prepareOnlineVote(s);
+          $('#roomBanner').hidden=true;setStage('vote');
+        }else if(s.stage==='result'){
+          $('#resultRound').textContent=`Round ${s.round} of ${s.settings.rounds} complete`;
+          const winners=s.winners||[];
+          $('#resultMedal').textContent=winners.length===1?'🏆':'🤝';
+          $('#resultTitle').textContent=winners.length===1?`${s.settings.names[winners[0]]} wins!`:'A SHARED VICTORY!';
+          $('#resultText').textContent=winners.length===1?'The votes are in!':`${winners.map(i=>s.settings.names[i]).join(' & ')} earned a point!`;
+          showGroupScores(true);makeGroupScores($('#resultGroupScores'),s.settings.names,s.scores);
+          $('#nextRoundBtn').innerHTML=s.round>=s.settings.rounds?'SEE THE CHAMPION →':'NEXT ROUND '+icon('ic-play');
+          $('#nextRoundBtn').disabled=online.seat!==0;
+          if(online.seat!==0)$('#resultText').textContent+=' Waiting for the host to continue.';
+          setStage('result');
+          if(previousStage!=='result'){celebrate();beep(660,.12);}
+        }else if(s.stage==='final'){
+          finishOnlineGame(s);
+          if(previousStage!=='final')celebrate();
+        }
+        online.lastStage=s.stage;online.lastRound=s.round;
+      }
+      $('#createOnlineBtn').addEventListener('click',()=>connectOnline('create'));
+      $('#joinOnlineBtn').addEventListener('click',()=>connectOnline('join'));
+      $('#copyInviteBtn').addEventListener('click',()=>onlineCopy('link'));
+      $('#copyCodeBtn').addEventListener('click',()=>onlineCopy('code'));
+      $('#roomCopyBtn').addEventListener('click',()=>onlineCopy('link'));
+      $('#beginOnlineBtn').addEventListener('click',()=>onlineAction('begin'));
+      $('#ideaBtn').addEventListener('click',()=>{
+        if(state.stage!=='prompting'||(online&&$('#promptSubmitBtn').disabled))return;
+        const category=state.settings?.category||'all';
+        const pool=category==='all'?Object.values(PROMPTS).flat():PROMPTS[category]||Object.values(PROMPTS).flat();
+        const choices=[...pool];
+        for(let i=0;i<3;i++){
+          const input=$('#challenge'+i);
+          if(!input.value.trim()&&choices.length){const at=rand(choices.length);input.value=choices.splice(at,1)[0];}
+        }
+        notify('Idea starters added! Edit them to make them your own.');
+      });
+      $('#promptForm').addEventListener('submit',async e=>{
+        e.preventDefault();if(state.stage!=='prompting')return;
+        let prompts;try{prompts=readPromptForm();}catch(err){notify(err.message);return;}
+        const btn=$('#promptSubmitBtn');btn.disabled=true;
+        if(online){
+          try{await onlineSend('submitPrompts',{prompts});
+            btn.textContent='✓ PROMPTS SUBMITTED';$('#promptingStatus').textContent='Submitted! Waiting for the rest of the artists.';
+          }catch(err){btn.disabled=false;notify(err.message);}
+        }else{
+          localPromptDrafts[localPromptSeat]=prompts;
+          if(localPromptSeat===0){localPromptSeat=1;renderLocalPromptPhase(true);notify('First prompts saved. Pass the device to the next player!');}
+          else finishLocalPromptPhase();
+        }
+      });
+      $('#onlineVoteGrid').addEventListener('click',e=>{const vote=e.target.closest('[data-group-vote]'),save=e.target.closest('[data-group-save]');if(vote&&online)onlineAction('vote',{vote:Number(vote.dataset.groupVote)});if(save&&online)exportArt(Number(save.dataset.groupSave));});
+      $('#revealVotesBtn').addEventListener('click',()=>onlineAction('reveal'));
+      $('#leaveWaitingBtn').addEventListener('click',leaveOnline);
+      const initialCode=new URLSearchParams(location.search).get('room');
+      if(initialCode){$('#joinCode').value=initialCode.trim().slice(0,6).toUpperCase();$('#joinCode').scrollIntoView({block:'center'});}
+      function launchLocalBattle(){const settings=getSettings();if(settings.names[0].toLowerCase()===settings.names[1].toLowerCase()){notify('Give your players different names!');return;}try{if(online)leaveOnline();startGame(settings);}catch(error){console.error('Local start error',error);notify('Could not start: '+error.message);}}
+      $('#setupForm').addEventListener('submit',e=>{e.preventDefault();launchLocalBattle();});
+      $('#localStartBtn').addEventListener('click',launchLocalBattle);
+      $('#resumeBtn').addEventListener('click',resume);
+      $('#startPauseBtn').addEventListener('click',()=>{if(online){onlineAction(state.mode==='drawing'?'pause':'clock');return;}if(state.mode==='drawing')pauseClock();else startClock();});
+      $('#extraBtn').addEventListener('click',()=>{if(online){onlineAction('extra');return;}state.remaining+=15;if(state.mode==='drawing')state.endAt=performance.now()+state.remaining*1000;renderTimer();notify('+15 seconds added!');saveSoon();});
+      $('#newPromptBtn').addEventListener('click',()=>{if(online){onlineAction('reroll');return;}if(state.mode!=='ready')return;state.prompt=choosePrompt();$('#promptDisplay').textContent=state.prompt;notify('New prompt rolled!');saveSoon();});
+      $('#judgeBtn').addEventListener('click',()=>{if(state.mode==='drawing'&&state.remaining>0&&!confirm('End this round early and open voting?'))return;if(online){finishOnlineRound().catch(e=>notify(e.message));return;}openVoting();});
+      $('#exitBtn').addEventListener('click',()=>{if(online){if(confirm('Leave this online room? You can rejoin with the same code.'))leaveOnline();return;}if(!confirm('Leave this battle? Your current drawing is saved so you can resume later.'))return;pauseClock();saveSoon();setStage('lobby');updateResume();});
+      $$('[data-vote]').forEach(btn=>btn.addEventListener('click',()=>online?onlineAction('vote',{vote:btn.dataset.vote}):recordVote(btn.dataset.vote)));
+      $('#saveVote0').addEventListener('click',()=>exportArt(0));$('#saveVote1').addEventListener('click',()=>exportArt(1));
+      $('#nextRoundBtn').addEventListener('click',()=>online?onlineAction('next'):state.round>=state.settings.rounds?finishGame():nextRound());
+      $('#rematchBtn').addEventListener('click',()=>online?onlineAction('rematch'):startGame({...state.settings,custom:''}));
+      $('#newPlayersBtn').addEventListener('click',()=>{if(online)leaveOnline();else setStage('lobby');});
+      $('#copyResultsBtn').addEventListener('click',copyResults);
+      $('#helpBtn').addEventListener('click',()=>$('#helpDialog').showModal());$('#helpCloseBtn').addEventListener('click',()=>$('#helpDialog').close());
+      $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;updateSound();try{localStorage.setItem('drawduel-sound',state.sound?'1':'0');}catch(e){}});
+      $('#brandLink').addEventListener('click',e=>{e.preventDefault();if(state.stage!=='lobby'&&!confirm(online?'Leave this online room?':'Go back to the lobby? Your active round will be saved.'))return;if(online){leaveOnline();return;}if(state.stage==='battle'){pauseClock();saveSoon();}setStage('lobby');updateResume();});
+      document.addEventListener('keydown',e=>{if(state.stage!=='battle'||state.mode!=='drawing')return;if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)||$('#helpDialog').open)return;const b=boards[online?online.seat:state.active];if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();if(e.shiftKey)b.redo();else b.undo();return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();b.redo();return;}if(e.ctrlKey||e.metaKey||e.altKey)return;const shortcut={b:'pen',m:'marker',s:'spray',e:'eraser',g:'fill',l:'line',r:'rect',o:'ellipse',i:'picker',t:'text'}[e.key.toLowerCase()];if(shortcut){b.chooseTool(shortcut);return;}if(e.key==='['){b.setSize(b.size-2);}if(e.key===']'){b.setSize(b.size+2);}});
+      try{const sound=localStorage.getItem('drawduel-sound');if(sound!==null)state.sound=sound==='1';const prefs=JSON.parse(localStorage.getItem(PREFS));if(prefs){$('#name0').value=prefs.names?.[0]||'Player 1';$('#name1').value=prefs.names?.[1]||'Player 2';$('#duration').value=prefs.duration||90;$('#rounds').value=prefs.rounds||3;$('#category').value=Object.hasOwn(PROMPTS,prefs.category)?prefs.category:'all';if(prefs.artMode)$('#artMode').value=prefs.artMode;if(prefs.maxPlayers)$('#maxPlayers').value=prefs.maxPlayers;}}catch(e){}
+      updateSound();updateResume();
+    })();
+  </script>
+</body>
+</html>
