@@ -1,3 +1,5 @@
+**Now supports 2–6 players:** Choose the player count on the main menu. Online games require each player to join the room before starting; local games use one device. Before each round every participant writes one new prompt, and the prompts rotate so each artist gets another player's challenge. The highest vote total wins each round (ties give everyone a point). Zoom and pan remain available per canvas.
+
 **Different prompts + canvas zoom:** There are no prompt fields in the menu. Before every round, each player writes a new prompt. Player 1 draws Player 2's prompt, and Player 2 draws Player 1's prompt. Each player can zoom their canvas from 100% to 400% and pan while zoomed in.
 
 # Draw Duel — Online Drawing Battles
@@ -35,7 +37,7 @@ This ZIP contains the entire app **and the multiplayer server**. Upload the cont
 - Responsive side-by-side canvas + tool rack (no scrolling between a canvas and its tools), plus keyboard shortcuts
 - One unique prompt from each player before every drawing round; each artist receives the other person's prompt
 - 45/60/90/120/180/300-second timer; 1/3/5/7/10 rounds; pause and +15 seconds
-- Online room creation/joining, shared clock and scores, streamed drawings, two-person voting, tie results, next-round and rematch controls
+- Online room creation/joining, shared clock and scores, streamed drawings, room-wide voting, tie results, next-round and rematch controls
 - Local autosave and resume; browser-based sound effects and results gallery
 - Lightweight Node.js built-in HTTP + Server-Sent Events backend (zero npm dependencies)
 
@@ -53,7 +55,7 @@ Only the **room host** starts the match, controls the clock, adds time and advan
 
 ## Notes
 
-No registration, lobby chat, or public matchmaking. Rooms are private-by-code and temporary. This version is intended for casual two-player games, not a production account system.
+No registration, lobby chat, or public matchmaking. Rooms are private-by-code and temporary. This version is intended for casual games with 2–6 players, not a production account system.
 
 ## Latest update — individual challenges and canvas zoom
 
