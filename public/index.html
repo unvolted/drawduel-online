@@ -424,7 +424,7 @@
         <button type="button" id="createOnlineBtn" class="online-cta full">🌐 CREATE ONLINE ROOM <span>→</span></button>
         <div class="join-divider"><span>OR JOIN A FRIEND</span></div>
         <div class="two-col join-inputs">
-          <div class="field"><label for="joinName">Your name</label><input id="joinName" maxlength="20" value="Player 2" autocomplete="nickname"></div>
+          <div class="field"><label for="joinName">Your name</label><input id="joinName" maxlength="20" value="" placeholder="Your name (or automatic Player #)" autocomplete="nickname"></div>
           <div class="field"><label for="joinCode">Room code</label><input id="joinCode" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input"></div>
         </div>
         <button type="button" id="joinOnlineBtn" class="secondary full join-button">JOIN ONLINE BATTLE →</button>
@@ -768,7 +768,7 @@
           if(online)leaveOnline();
           const data=mode==='create'
             ? await request('create',{name:safeText($('#name0').value)||'Player 1',settings:getSettings()})
-            : await request('join',{code:safeText($('#joinCode').value,6).toUpperCase(),name:safeText($('#joinName').value)||'Player 2',token:localStorage.getItem('drawduel-token-'+safeText($('#joinCode').value,6).toUpperCase())||''});
+            : await request('join',{code:safeText($('#joinCode').value,6).toUpperCase(),name:safeText($('#joinName').value),token:localStorage.getItem('drawduel-token-'+safeText($('#joinCode').value,6).toUpperCase())||''});
           online={...data,source:null,lastStage:null,lastRound:0,receivedArt:[],artBusy:false,artPending:false};
           try{localStorage.setItem('drawduel-token-'+online.code,online.token);}catch(e){}
           $('#waitingCode').textContent=online.code;setStage('waiting');
