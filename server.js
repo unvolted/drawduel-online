@@ -185,7 +185,9 @@ const server = http.createServer(async (req,res) => {
       if(room.stage!=='waiting')return fail(res,409,'The battle has already started. You cannot join now.');
       seat=room.players.findIndex(p=>!p||(!connected(p)&&p.disconnectedAt&&Date.now()-p.disconnectedAt>120000));
       if(seat<0)return fail(res,409,'This room is full ('+room.players.length+' artists).');
-      room.players[seat]=person(body.name||'Player '+(seat+1));
+      const requested=trim(body.name)||'Player '+(seat+1);
+      const existing=room.players.some(p=>p&&p.name.toLocaleLowerCase()===requested.toLocaleLowerCase());
+      room.players[seat]=person(existing?'Player '+(seat+1):requested);
     }
     broadcast(room);return send(res,200,{code:room.code,token:room.players[seat].token,seat});
   }
