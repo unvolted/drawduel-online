@@ -525,23 +525,22 @@
       function updateSound() { $('#soundBtn').innerHTML=icon(state.sound?'ic-sound':'ic-muted'); $('#soundBtn').setAttribute('aria-label',state.sound?'Mute sounds':'Unmute sounds'); $('#soundBtn').title=state.sound?'Mute sounds':'Unmute sounds'; }
       function rand(n) {return Math.floor(Math.random()*n);}
       function choosePrompt() { let pool=state.settings.category==='all'?Object.values(PROMPTS).flat():PROMPTS[state.settings.category]; let available=pool.filter(p=>!state.used.includes(p)); if(!available.length) { state.used=[]; available=pool; } const prompt=available[rand(available.length)]; state.used.push(prompt); return prompt; }
-      function getSettings(){return {names:[safeText($('#name0').value)||'Player 1',safeText($('#name1').value)||'Player 2'],duration:Number($('#duration').value),rounds:Number($('#rounds').value),category:'all',custom:''};}
+      function getSettings(){
+  const names=Array.from($('#localNameFields').querySelectorAll('input')).map((input,i)=>safeText(input.value)||'Player '+(i+1));
+  return {names,playerCount:names.length,duration:Number($('#duration').value),rounds:Number($('#rounds').value),category:'all',custom:''};
+}
       function renderScores() {boards.forEach((b,i)=>{ $('.name-text',b.root).textContent=state.settings.names[i]; $('.score-pill',b.root).textContent=`${state.scores[i]} ${state.scores[i]===1?'PT':'PTS'}`; b.canvas.setAttribute('aria-label',`${state.settings.names[i]} drawing canvas`);const p=online?(online.seat===i?state.prompt:''):(state.prompts?.[i]||'');$('.board-challenge',b.root).textContent=p?'✏️ Your challenge: '+p:'';});}
       function openLocalPrompts(){
         state.prompt='';state.settings.custom='';
         $('#promptRoundTitle').textContent='ROUND '+state.round+' / '+state.settings.rounds+' · NEW PROMPTS';
         $('#promptLocalFields').hidden=false;$('#promptOnlineField').hidden=true;
-        $('#localPromptLabel0').textContent=state.settings.names[0]+"'s prompt";
-        $('#localPromptLabel1').textContent=state.settings.names[1]+"'s prompt";
-        $('#localPrompt0').value='';$('#localPrompt1').value='';
-        $('#promptRoundStatus').textContent='Each player writes ONE new prompt for this round.';
-        $('#promptRoundSubmit').disabled=false;
-        $('#promptRoundSubmit').textContent="CHOOSE THIS ROUND'S PROMPT →";
-        setStage('prompts');
-        $('#localPrompt0').focus();
+        $('#promptLocalFields').innerHTML=state.settings.names.map((name,i)=>'<div class="field"><label for="localPrompt'+i+'">'+esc(name)+"'s prompt"+'</label><input id="localPrompt'+i+'" maxlength="90" placeholder="Write a creative challenge..." autocomplete="off"></div>').join('');
+        $('#promptRoundStatus').textContent='Each of the '+state.settings.playerCount+' players writes ONE new prompt.';
+        $('#promptRoundSubmit').disabled=false;$('#promptRoundSubmit').textContent="CHOOSE THIS ROUND'S PROMPTS →";
+        setStage('prompts');$('#localPrompt0').focus();
       }
       function startGame(settings=getSettings()) {
-        stopClock();state.settings={...settings,custom:''};state.round=1;state.scores=[0,0];state.used=[];state.gallery=[];
+        stopClock();state.settings={...settings,custom:''};state.round=1;state.scores=Array(settings.playerCount).fill(0);state.used=[];state.gallery=[];syncBoards(settings.playerCount);
         state.remaining=settings.duration;state.mode='ready';state.active=0;state.prompts=null;
         $('#boards').classList.remove('mine-second','online-solo','focused');
         boards.forEach(b=>{b.root.classList.remove('online-mine','online-locked','in-focus');b.reset();});
@@ -649,7 +648,51 @@
         sprayAt(p){const ctx=this.ctx;ctx.save();ctx.fillStyle=this.color;ctx.globalAlpha=.55;const radius=this.size*2.1;for(let i=0;i<Math.max(12,this.size*4);i++){let r=Math.sqrt(Math.random())*radius,angle=Math.random()*Math.PI*2,x=p.x+Math.cos(angle)*r,y=p.y+Math.sin(angle)*r;ctx.fillRect(x,y,Math.max(1,this.size/8),Math.max(1,this.size/8));}ctx.restore();}
         shape(a,b){const ctx=this.ctx;ctx.save();ctx.globalAlpha=1;ctx.lineWidth=this.size;ctx.strokeStyle=this.color;ctx.fillStyle=this.color;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();if(this.tool==='line'){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}else if(this.tool==='rect'){ctx.rect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y));}else if(this.tool==='ellipse'){const rx=Math.max(.1,Math.abs(b.x-a.x)/2),ry=Math.max(.1,Math.abs(b.y-a.y)/2);ctx.ellipse((a.x+b.x)/2,(a.y+b.y)/2,rx,ry,0,0,Math.PI*2);}if(this.filled&&this.tool!=='line')ctx.fill();else ctx.stroke();ctx.restore();}
       }
+      const boardTemplate=$('#board0').cloneNode(true);
       const boards=[new Board($('#board0'),0),new Board($('#board1'),1)];
+      function syncBoards(n){
+  const count=Math.max(2,Math.min(6,Number(n)||2));
+  while(boards.length<count){
+    const i=boards.length,root=boardTemplate.cloneNode(true);
+    root.id='board'+i;root.dataset.player=String(i);
+    $('.player-badge',root).textContent=i+1;
+    $('.name-text',root).textContent='Player '+(i+1);
+    const c=$('canvas',root);c.setAttribute('aria-label','Player '+(i+1)+' drawing canvas');
+    $('.brush-size',root).setAttribute('aria-label','Brush size player '+(i+1));
+    $('#boards').append(root);boards.push(new Board(root,i));
+  }
+  while(boards.length>count){const b=boards.pop();b.root.remove();}
+}
+      function renderScoreboard(stage){
+  const el=$('#'+stage+'Scoreboard');
+  if(!el)return;
+  el.innerHTML=state.settings.names.map((name,i)=>'<div class="score-player"><div class="score-name">'+esc(name)+'</div><strong class="score-num">'+(state.scores[i]||0)+'</strong></div>').join('');
+}
+      function renderVoteGrid(names,prompts,images){
+  const root=$('#voteGrid');
+  root.innerHTML=names.map((name,i)=>{
+    const src=images?.[i]||boards[i]?.canvas.toDataURL('image/png')||'';
+    return `<article class="art-card ${i===0?'one':i===1?'two':''}" style="--accent:${['#ff7695','#ac8fff','#77dcef','#d8ff64','#ffc48d','#f5a4e2'][i]}">
+      <div class="art-name"><span>${esc(name)}</span><span class="index">ART #${i+1}</span></div>
+      <div class="vote-art-prompt">Challenge: ${esc(prompts?.[i]||'Your secret challenge')}</div>
+      <img src="${src}" alt="${esc(name)} completed artwork">
+      <button class="vote-btn" data-vote="${i}" type="button">🏆 Vote for ${esc(name)}</button>
+      <button class="mini" data-save="${i}" type="button" style="margin-top:10px">↓ Save artwork</button>
+    </article>`;
+  }).join('');
+}
+      function updateNameFields(){
+  const n=Number($('#playerCount').value);
+  const holder=$('#localNameFields');
+  for(let i=2;i<n;i++){
+    if($('#name'+i))continue;
+    const d=document.createElement('div');d.className='field';
+    d.innerHTML='<label for="name'+i+'"><span class="player-label">Player '+(i+1)+'</span></label><input id="name'+i+'" maxlength="20" autocomplete="off" value="Player '+(i+1)+'" required>';
+    holder.append(d);
+  }
+  for(let i=6;i>=n;i--){const x=$('#name'+i);if(x)x.parentElement.remove();}
+}
+      $('#playerCount').addEventListener('change',updateNameFields);
       // Online mode: a small HTTP + Server-Sent Events protocol (same-origin, no account).
       const request = async (route, payload) => {
         let response;
@@ -793,9 +836,9 @@
           catch(err){notify(err.message);button.disabled=false;button.textContent='SUBMIT MY ONE PROMPT →';}
           return;
         }
-        const prompts=[safeText($('#localPrompt0').value,90),safeText($('#localPrompt1').value,90)];
-        if(prompts.some(p=>!p)){notify('Both players must write one new prompt.');(prompts[0]?$('#localPrompt1'):$('#localPrompt0')).focus();return;}
-        if(prompts[0].toLocaleLowerCase()===prompts[1].toLocaleLowerCase()){notify('Use two different prompts so everyone gets a unique challenge.');return;}state.prompts=[prompts[1],prompts[0]];state.prompt='';state.settings.custom='';
+        const prompts=state.settings.names.map((_,i)=>safeText($('#localPrompt'+i).value,90));
+        if(prompts.some(p=>!p)){notify('Every player must write one new prompt.');$('#localPrompt'+prompts.findIndex(p=>!p)).focus();return;}
+        if(new Set(prompts.map(p=>p.toLocaleLowerCase())).size!==prompts.length){notify('Every prompt needs to be different.');return;}state.prompts=prompts.map((_,i)=>prompts[(i+1)%prompts.length]);state.prompt='';state.settings.custom='';
         state.remaining=state.settings.duration;state.mode='ready';state.active=0;
         boards.forEach(b=>b.reset());
         renderBattle();setStage('battle');saveSoon();
@@ -804,7 +847,7 @@
       $('#leaveWaitingBtn').addEventListener('click',leaveOnline);
       const initialCode=new URLSearchParams(location.search).get('room');
       if(initialCode){$('#joinCode').value=initialCode.trim().slice(0,6).toUpperCase();$('#joinCode').scrollIntoView({block:'center'});}
-      function launchLocalBattle(){const settings=getSettings();if(settings.names[0].toLowerCase()===settings.names[1].toLowerCase()){notify('Give your players different names!');return;}try{if(online)leaveOnline();startGame(settings);}catch(error){console.error('Local start error',error);notify('Could not start: '+error.message);}}
+      function launchLocalBattle(){const settings=getSettings();if(new Set(settings.names.map(n=>n.toLocaleLowerCase())).size!==settings.names.length){notify('Give every player a different name!');return;}try{if(online)leaveOnline();startGame(settings);}catch(error){console.error('Local start error',error);notify('Could not start: '+error.message);}}
       $('#setupForm').addEventListener('submit',e=>{e.preventDefault();launchLocalBattle();});
       $('#localStartBtn').addEventListener('click',launchLocalBattle);
       $('#resumeBtn').addEventListener('click',resume);
@@ -823,7 +866,7 @@
       $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;updateSound();try{localStorage.setItem('drawduel-sound',state.sound?'1':'0');}catch(e){}});
       $('#brandLink').addEventListener('click',e=>{e.preventDefault();if(state.stage!=='lobby'&&!confirm(online?'Leave this online room?':'Go back to the lobby? Your active round will be saved.'))return;if(online){leaveOnline();return;}if(state.stage==='battle'){pauseClock();saveSoon();}setStage('lobby');updateResume();});
       document.addEventListener('keydown',e=>{if(state.stage!=='battle'||state.mode!=='drawing')return;if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)||$('#helpDialog').open)return;const b=boards[online?online.seat:state.active];if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();if(e.shiftKey)b.redo();else b.undo();return;}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();b.redo();return;}if(e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==='+'||e.key==='='){e.preventDefault();b.setZoom(b.zoom+.25);return;}if(e.key==='-'){e.preventDefault();b.setZoom(b.zoom-.25);return;}if(e.key==='0'){e.preventDefault();b.setZoom(1);return;}const shortcut={b:'pen',m:'marker',s:'spray',e:'eraser',g:'fill',l:'line',r:'rect',o:'ellipse',i:'picker',t:'text'}[e.key.toLowerCase()];if(shortcut){b.chooseTool(shortcut);return;}if(e.key==='['){b.setSize(b.size-2);}if(e.key===']'){b.setSize(b.size+2);}});
-      try{const sound=localStorage.getItem('drawduel-sound');if(sound!==null)state.sound=sound==='1';const prefs=JSON.parse(localStorage.getItem(PREFS));if(prefs){$('#name0').value=prefs.names?.[0]||'Player 1';$('#name1').value=prefs.names?.[1]||'Player 2';$('#duration').value=prefs.duration||90;$('#rounds').value=prefs.rounds||1;}}catch(e){}
+      try{const sound=localStorage.getItem('drawduel-sound');if(sound!==null)state.sound=sound==='1';const prefs=JSON.parse(localStorage.getItem(PREFS));if(prefs){$('#playerCount').value=String(prefs.playerCount||prefs.names?.length||2);updateNameFields();prefs.names?.forEach((n,i)=>{const el=$('#name'+i);if(el)el.value=n;});$('#duration').value=prefs.duration||90;$('#rounds').value=prefs.rounds||1;}}catch(e){}
       updateSound();updateResume();
     })();
   </script>
