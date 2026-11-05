@@ -15,10 +15,10 @@ const trim = (s, max = 20) => String(s ?? '').trim().slice(0, max);
 function id() { return crypto.randomBytes(24).toString('hex'); }
 function code() { let v; do { v = Array.from(crypto.randomBytes(6), b => CODE_ALPHABET[b % CODE_ALPHABET.length]).join(''); } while (rooms.has(v)); return v; }
 function validSettings(s) {
-  const duration = Number(s?.duration), rounds = Number(s?.rounds);
+  const duration = Number(s?.duration), rounds = Number(s?.rounds), playerCount=Number(s?.playerCount);
   const category = Object.hasOwn(PROMPTS, s?.category) || s?.category === 'all' ? s.category : 'all';
   return { duration: [45,60,90,120,180,300].includes(duration) ? duration : 90,
-    rounds: [1,3,5,7,10].includes(rounds) ? rounds : 1, category,
+    rounds: [1,3,5,7,10].includes(rounds) ? rounds : 1, playerCount:Number.isInteger(playerCount)&&playerCount>=2&&playerCount<=6?playerCount:2, category,
     custom: trim(s?.custom, 90) };
 }
 function nextPrompt(room) {
@@ -38,105 +38,109 @@ function send(res, status, payload) {
 }
 function fail(res, status, message) { send(res, status, { error:message }); }
 function event(res, kind, data) { if (!res.destroyed && !res.writableEnded) res.write('event: '+kind+'\ndata: '+JSON.stringify(data)+'\n\n'); }
-function stateFor(room, seat) {
-  return { code:room.code, seat, host:seat === 0, stage:room.stage, mode:room.mode,
-    players:room.players.map(p => p ? { name:p.name, online:connected(p) } : null),
-    settings: { ...room.settings, custom:'', names: room.players.map((p,i) => p?.name || `Player ${i+1}`) },
-    round:room.round, prompt:room.drawPrompts?.[seat] || '', promptsReady:room.prompts.map(Boolean),
-    drawPrompts:['vote','result','final'].includes(room.stage)?room.drawPrompts:null,
-    remainingMs:room.remainingMs, endAt:room.endAt,
-    scores:room.scores, art:room.art, winner:room.winner, gallery:room.gallery,
-    voted:seat >= 0 && Object.hasOwn(room.votes, seat), votesCast:Object.keys(room.votes).length };
+function stateFor(room,seat){
+  const revealed=['vote','result','final'].includes(room.stage);
+  return {
+    code:room.code,seat,host:seat===0,stage:room.stage,mode:room.mode,
+    players:room.players.map(p=>p?{name:p.name,online:connected(p)}:null),
+    settings:{...room.settings,custom:'',names:room.players.map((p,i)=>p?.name||'Player '+(i+1))},
+    round:room.round,prompt:room.drawPrompts?.[seat]||'',
+    promptsReady:room.prompts.map(Boolean),
+    drawPrompts:revealed?room.drawPrompts:null,
+    remainingMs:room.remainingMs,endAt:room.endAt,
+    scores:room.scores,
+    art:revealed?room.art:room.art.map((img,i)=>i===seat?img:null),
+    winner:room.winner,gallery:room.gallery,voted:Object.hasOwn(room.votes,seat),
+    votesCast:Object.keys(room.votes).length
+  };
 }
-function broadcast(room) {
-  room.updatedAt = Date.now();
-  for (let seat = 0; seat < 2; seat++) {
-    const p = room.players[seat]; if (!p) continue;
-    for (const res of p.streams) event(res, 'state', stateFor(room, seat));
-  }
+function broadcast(room){
+  room.updatedAt=Date.now();
+  room.players.forEach((p,seat)=>{if(p)for(const res of p.streams)event(res,'state',stateFor(room,seat));});
 }
-function broadcastArt(room, from, image) {
-  room.updatedAt = Date.now();
-  for (let seat = 0; seat < 2; seat++) {
-    if (seat === from || !room.players[seat]) continue;
-    for (const res of room.players[seat].streams) event(res, 'art', { seat:from, image });
-  }
+function broadcastArt(room,from,image){
+  room.updatedAt=Date.now();
+  // Opponents' artwork is intentionally private until the voting reveal.
 }
-function expireClock(room) {
-  if (room.stage === 'battle' && room.mode === 'drawing' && Date.now() >= room.endAt) {
-    room.mode = 'finished'; room.stage = 'vote'; room.remainingMs = 0; room.endAt = 0;
+function expireClock(room){
+  if(room.stage==='battle'&&room.mode==='drawing'&&Date.now()>=room.endAt){
+    room.mode='finished';room.stage='vote';room.remainingMs=0;room.endAt=0;
     broadcast(room);
   }
 }
-function preparePromptRound(room) {
-  room.stage='prompts'; room.mode='ready'; room.prompts=[null,null]; room.drawPrompts=[null,null]; room.prompt='';
-  room.settings.custom=''; room.art=[null,null]; room.votes={}; room.winner=null;
-  room.remainingMs=room.settings.duration*1000; room.endAt=0;
+function preparePromptRound(room){
+  const n=room.players.length;
+  room.stage='prompts';room.mode='ready';room.prompts=Array(n).fill(null);
+  room.drawPrompts=Array(n).fill(null);room.prompt='';room.settings.custom='';
+  room.art=Array(n).fill(null);room.votes={};room.winner=null;
+  room.remainingMs=room.settings.duration*1000;room.endAt=0;
 }
-function resetBattle(room) {
-  room.round=1; room.scores=[0,0]; room.used=[]; room.gallery=[];
-  preparePromptRound(room);
+function resetBattle(room){
+  room.round=1;room.scores=Array(room.players.length).fill(0);
+  room.used=[];room.gallery=[];preparePromptRound(room);
 }
-function handleAction(room, seat, body, res) {
+function handleAction(room,seat,body,res){
   expireClock(room);
-  const a = body.action;
-  const hostOnly = ['begin','clock','pause','extra','reroll','finish','next','rematch'];
-  if (hostOnly.includes(a) && seat !== 0) return fail(res, 403, 'Only the room host can do that.');
-  if (a === 'begin') {
-    if (room.stage !== 'waiting') return fail(res, 409, 'The battle already started.');
-    if (!room.players.every(connected)) return fail(res, 409, 'Both artists must be connected first.');
+  const a=body.action,n=room.players.length;
+  const hostOnly=['begin','clock','pause','extra','reroll','finish','next','rematch'];
+  if(hostOnly.includes(a)&&seat!==0)return fail(res,403,'Only the room host can do that.');
+  if(a==='begin'){
+    if(room.stage!=='waiting')return fail(res,409,'The battle already started.');
+    if(!room.players.every(connected))return fail(res,409,'All '+n+' artists must be connected first.');
     resetBattle(room);
-  } else if (a === 'submit_prompt') {
-    if (room.stage !== 'prompts') return fail(res,409,'Prompts are not being collected right now.');
-    if (room.prompts[seat]) return fail(res,409,'You already submitted your one prompt for this round.');
+  }else if(a==='submit_prompt'){
+    if(room.stage!=='prompts')return fail(res,409,'Prompts are not being collected right now.');
+    if(room.prompts[seat])return fail(res,409,'You already submitted a prompt this round.');
     const submission=trim(body.prompt,90);
-    if (!submission) return fail(res,400,'Enter one drawing prompt to continue.');
-    if (room.prompts.some(p=>p && p.toLocaleLowerCase() === submission.toLocaleLowerCase()))
-      return fail(res,409,'That prompt is already submitted. Write a different one so both artists have unique challenges.');
+    if(!submission)return fail(res,400,'Enter one drawing prompt to continue.');
+    if(room.prompts.some(p=>p&&p.toLocaleLowerCase()===submission.toLocaleLowerCase()))
+      return fail(res,409,'That prompt was already submitted. Please choose a different one.');
     room.prompts[seat]=submission;
-    if (room.prompts.every(Boolean)) {
-      // Each artist draws the prompt written by the OTHER artist.
-      room.drawPrompts=[room.prompts[1],room.prompts[0]];
-      room.stage='battle';
-      room.mode='ready';
+    if(room.prompts.every(Boolean)){
+      // Each player draws the NEXT player's prompt, cycling through the room.
+      room.drawPrompts=room.prompts.map((_,i)=>room.prompts[(i+1)%n]);
+      room.stage='battle';room.mode='ready';
     }
-  } else if (a === 'clock') {
-    if (room.stage !== 'battle' || !['ready','paused'].includes(room.mode)) return fail(res,409,'Cannot start the clock right now.');
-    room.mode='drawing'; room.endAt=Date.now()+room.remainingMs;
-  } else if (a === 'pause') {
-    if (room.stage !== 'battle' || room.mode !== 'drawing') return fail(res,409,'Clock is not running.');
-    room.remainingMs=Math.max(0,room.endAt-Date.now()); room.endAt=0; room.mode='paused';
-  } else if (a === 'extra') {
-    if (room.stage !== 'battle' || room.mode === 'finished') return fail(res,409,'Not in a drawing round.');
-    room.remainingMs+=15000; if (room.mode === 'drawing') room.endAt+=15000;
-  } else if (a === 'reroll') {
-    return fail(res,409,'The shared challenge comes from the players and cannot be rerolled.');
-  } else if (a === 'finish') {
-    if (room.stage !== 'battle') return fail(res,409,'Not in a drawing round.');
-    room.stage='vote'; room.mode='finished'; room.endAt=0; room.remainingMs=0; room.votes={};
-  } else if (a === 'vote') {
-    if (room.stage !== 'vote') return fail(res,409,'Not voting yet.');
-    if (Object.hasOwn(room.votes, seat)) return fail(res,409,'You already voted.');
-    const vote = body.vote === 'tie' ? 'tie' : Number(body.vote);
-    if (![0,1,'tie'].includes(vote)) return fail(res,400,'Invalid vote.');
+  }else if(a==='clock'){
+    if(room.stage!=='battle'||!['ready','paused'].includes(room.mode))return fail(res,409,'Cannot start the clock right now.');
+    room.mode='drawing';room.endAt=Date.now()+room.remainingMs;
+  }else if(a==='pause'){
+    if(room.stage!=='battle'||room.mode!=='drawing')return fail(res,409,'Clock is not running.');
+    room.remainingMs=Math.max(0,room.endAt-Date.now());room.endAt=0;room.mode='paused';
+  }else if(a==='extra'){
+    if(room.stage!=='battle'||room.mode==='finished')return fail(res,409,'Not in a drawing round.');
+    room.remainingMs+=15000;if(room.mode==='drawing')room.endAt+=15000;
+  }else if(a==='reroll'){
+    return fail(res,409,'Each artist receives an opponent-written prompt. Reroll is not available.');
+  }else if(a==='finish'){
+    if(room.stage!=='battle')return fail(res,409,'Not in a drawing round.');
+    room.stage='vote';room.mode='finished';room.endAt=0;room.remainingMs=0;room.votes={};
+  }else if(a==='vote'){
+    if(room.stage!=='vote')return fail(res,409,'Not voting yet.');
+    if(Object.hasOwn(room.votes,seat))return fail(res,409,'You already voted.');
+    const vote=body.vote==='tie'?'tie':Number(body.vote);
+    if(vote!=='tie'&&(!Number.isInteger(vote)||vote<0||vote>=n))return fail(res,400,'Invalid vote.');
     room.votes[seat]=vote;
-    if (Object.keys(room.votes).length === 2) {
-      const v0=room.votes[0], v1=room.votes[1];
-      room.winner=v0===v1?v0:'tie';
-      if (room.winner === 'tie') { room.scores[0]++; room.scores[1]++; }
+    if(Object.keys(room.votes).length===n){
+      const counts=Array(n).fill(0);let tieVotes=0;
+      for(const v of Object.values(room.votes)){if(v==='tie')tieVotes++;else counts[v]++;}
+      const top=Math.max(...counts,tieVotes);
+      const leaders=counts.map((v,i)=>v===top?i:-1).filter(i=>i>=0);
+      room.winner=tieVotes===top||leaders.length!==1?'tie':leaders[0];
+      if(room.winner==='tie')room.scores=room.scores.map(v=>v+1);
       else room.scores[room.winner]++;
       room.gallery.push({round:room.round,prompts:room.drawPrompts.slice(),winner:room.winner,art:room.art.slice()});
-      room.stage='result'; room.votes={};
+      room.stage='result';room.votes={};
     }
-  } else if (a === 'next') {
-    if (room.stage !== 'result') return fail(res,409,'Round results are not ready.');
-    if (room.round >= room.settings.rounds) room.stage='final';
-    else { room.round++; preparePromptRound(room); }
-  } else if (a === 'rematch') {
-    if (room.stage !== 'final') return fail(res,409,'The battle is still in progress.');
+  }else if(a==='next'){
+    if(room.stage!=='result')return fail(res,409,'Round results are not ready.');
+    if(room.round>=room.settings.rounds)room.stage='final';
+    else{room.round++;preparePromptRound(room);}
+  }else if(a==='rematch'){
+    if(room.stage!=='final')return fail(res,409,'The battle is still in progress.');
     resetBattle(room);
-  } else return fail(res,400,'Unknown action.');
-  send(res,200,{ok:true}); broadcast(room);
+  }else return fail(res,400,'Unknown action.');
+  send(res,200,{ok:true});broadcast(room);
 }
 async function readJson(req, max = 700000) {
   let size=0, chunks=[];
@@ -168,21 +172,20 @@ const server = http.createServer(async (req,res) => {
   if (url.pathname==='/api/create') {
     const settings=validSettings(body.settings); settings.custom='';
     const roomCode=code(), host=person(body.name || 'Player 1');
-    const room={code:roomCode,players:[host,null],settings,prompts:[null,null],stage:'waiting',mode:'ready',round:1,
-      prompt:'',remainingMs:90000,endAt:0,scores:[0,0],art:[null,null],votes:{},gallery:[],used:[],winner:null,updatedAt:Date.now()};
+    const n=settings.playerCount;
+    const room={code:roomCode,players:[host,...Array(n-1).fill(null)],settings,prompts:Array(n).fill(null),drawPrompts:Array(n).fill(null),stage:'waiting',mode:'ready',round:1,
+      prompt:'',remainingMs:settings.duration*1000,endAt:0,scores:Array(n).fill(0),art:Array(n).fill(null),votes:{},gallery:[],used:[],winner:null,updatedAt:Date.now()};
     rooms.set(roomCode,room);return send(res,200,{code:roomCode,token:host.token,seat:0});
   }
   const codeParam=trim(body.code,6).toUpperCase(), room=rooms.get(codeParam);
   if (!room) return fail(res,404,'Room not found. Check the room code.');
   if (url.pathname==='/api/join') {
     let seat=seatOf(room,body.token);
-    if(seat<0) {
-      const player1=room.players[1];
-      if(!player1 || (!connected(player1) && player1.disconnectedAt && Date.now()-player1.disconnectedAt>120000)) {
-        room.players[1]=person(body.name || 'Player 2');
-        if(room.stage==='prompts') room.prompts[1]=null;
-        seat=1;
-      } else return fail(res,409,'This room already has two players.');
+    if(seat<0){
+      if(room.stage!=='waiting')return fail(res,409,'The battle has already started. You cannot join now.');
+      seat=room.players.findIndex(p=>!p||(!connected(p)&&p.disconnectedAt&&Date.now()-p.disconnectedAt>120000));
+      if(seat<0)return fail(res,409,'This room is full ('+room.players.length+' artists).');
+      room.players[seat]=person(body.name||'Player '+(seat+1));
     }
     broadcast(room);return send(res,200,{code:room.code,token:room.players[seat].token,seat});
   }
