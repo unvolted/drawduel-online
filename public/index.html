@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10101a">
-  <meta name="description" content="Draw Duel: a fast, creative, two-player drawing battle game with timers, fun prompts, art tools and voting.">
-  <title>DrawingDuel — One Prompt, Two Artists</title>
+  <meta name="description" content="DrawingDuel: online and local drawing battles for 2 to 6 players, with unique prompts, zoom, and voting.">
+  <title>DrawingDuel — Drawing Battles for 2–6 Players</title>
   <style>
     :root { --bg:#0e0f19; --panel:#191b29; --panel2:#222435; --border:#33364c; --muted:#a2a6ba; --ink:#f8f8ff; --lime:#d8ff64; --purple:#ac8fff; --pink:#ff7695; --cyan:#77dcef; --shadow:0 18px 50px rgba(0,0,0,.22); }
     * { box-sizing:border-box; }
@@ -452,7 +452,7 @@
       <div class="waiting-card prompt-round-card">
         <div class="eyebrow">✏️ NEW ROUND, NEW CHALLENGE</div>
         <h2 id="promptRoundTitle">ROUND 1 · YOUR PROMPTS</h2>
-        <p class="muted">Write just <strong>one new prompt per player</strong>. You will each draw the challenge written by the other player.</p>
+        <p class="muted">Write just <strong>one new prompt per player</strong>. Each player draws a different challenge written by another artist.</p>
         <form id="promptRoundForm">
           <div class="prompt-local-fields" id="promptLocalFields">
             <div class="field"><label for="localPrompt0" id="localPromptLabel0">Player 1's prompt</label><input id="localPrompt0" maxlength="90" placeholder="e.g. A dragon eating ice cream" autocomplete="off"></div>
@@ -481,7 +481,7 @@
       <div class="hint-strip">💡 Tip: Pick tools on each canvas independently. Use <kbd>B</kbd> brush, <kbd>E</kbd> eraser, <kbd>G</kbd> fill, <kbd>Ctrl Z</kbd> undo, or the focus button for a bigger canvas.</div>
     </section>
 
-    <section id="vote" class="screen vote-page" hidden><div class="eyebrow">Time to crown an artist</div><h2 class="section-title">THE BIG REVEAL!</h2><p class="section-sub"><strong id="votePrompt">Each artist drew a different challenge.</strong> Vote for your favorite drawing or call it a tie.</p><div class="vote-grid" id="voteGrid"></div><button class="tie-btn" data-vote="tie">🤝 It's a tie — both get 1 point</button><p class="vote-rules" id="voteRules">Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.</p></section>
+    <section id="vote" class="screen vote-page" hidden><div class="eyebrow">Time to crown an artist</div><h2 class="section-title">THE BIG REVEAL!</h2><p class="section-sub"><strong id="votePrompt">Each artist drew a different challenge.</strong> Vote for your favorite drawing or call it a tie.</p><div class="vote-grid" id="voteGrid"></div><button class="tie-btn" data-vote="tie">🤝 It's a tie — both get 1 point</button><p class="vote-rules" id="voteRules">Local judging: choose your favorite artwork. Ties award a point to every artist.</p></section>
 
     <section id="result" class="screen result-page" hidden><div class="eyebrow" id="resultRound">Round 1 complete</div><div class="result-medal" id="resultMedal">🏆</div><h2 class="result-message" id="resultTitle">Player 1 wins!</h2><p class="section-sub" id="resultText">What a masterpiece. On to the next challenge.</p><div class="scoreboard" id="resultScoreboard"></div><div class="actions-center"><button class="primary" id="nextRoundBtn">NEXT ROUND <svg class="ic"><use href="#ic-play"/></svg></button></div></section>
 
@@ -489,7 +489,7 @@
 
     <footer class="footer-note">✳ DRAWDUEL — Art battles with friends. Local mode works offline; online mode requires the game server.</footer>
   </div>
-  <dialog id="helpDialog"><h2>🎨 How to play</h2><p><strong>1.</strong> Set up a room or local match, then each player enters ONE new prompt before each round. Each player draws the prompt written by the other artist.<br><strong>2.</strong> Hit <strong>Start drawing</strong>. Both players draw their own different challenges until time runs out.<br><strong>3.</strong> Compare the artwork and vote. Most points after the final round wins!</p><p><strong>Your drawing toolkit:</strong> Pencil, marker, spray, eraser, paint bucket, line, rectangle, ellipse, color picker and text. Each player gets their own colors, sizes, undo/redo, grid, filled-shape toggle and PNG download.</p><p><strong>Shortcuts:</strong> Click a canvas to make it active. Zoom with + and − (up to 400%), Reset to 100%, then choose Pan and drag to move the enlarged drawing. On desktop you can also hold Shift while dragging or Alt+scroll. Keyboard +, − and 0 zoom, zoom out and reset. Press B (brush), M (marker), S (spray), E (eraser), G (fill), L (line), R (rectangle), O (ellipse), I (eyedropper), T (text). Ctrl/Cmd + Z to undo, Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z to redo. [ and ] change size.</p><p class="small-caption">Choose Start Local Battle for two artists on one device, or Create Online Room to invite a friend on another device. The room host controls the clock and next rounds. Both online players vote; agreement picks a winner, otherwise it is a tie. Online rooms are temporary, so save art as PNG before leaving.</p><div class="dialog-actions"><button class="primary small-primary" id="helpCloseBtn">Got it!</button></div></dialog>
+  <dialog id="helpDialog"><h2>🎨 How to play</h2><p><strong>1.</strong> Set up a room or local match, then each player enters ONE new prompt before each round. Each player draws the prompt written by the other artist.<br><strong>2.</strong> Hit <strong>Start drawing</strong>. Both players draw their own different challenges until time runs out.<br><strong>3.</strong> Compare the artwork and vote. Most points after the final round wins!</p><p><strong>Your drawing toolkit:</strong> Pencil, marker, spray, eraser, paint bucket, line, rectangle, ellipse, color picker and text. Each player gets their own colors, sizes, undo/redo, grid, filled-shape toggle and PNG download.</p><p><strong>Shortcuts:</strong> Click a canvas to make it active. Zoom with + and − (up to 400%), Reset to 100%, then choose Pan and drag to move the enlarged drawing. On desktop you can also hold Shift while dragging or Alt+scroll. Keyboard +, − and 0 zoom, zoom out and reset. Press B (brush), M (marker), S (spray), E (eraser), G (fill), L (line), R (rectangle), O (ellipse), I (eyedropper), T (text). Ctrl/Cmd + Z to undo, Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z to redo. [ and ] change size.</p><p class="small-caption">Choose Start Local Battle for 2–6 artists on one device, or Create Online Room to invite up to five friends on different devices. The room host controls the clock and next rounds. Both online players vote; agreement picks a winner, otherwise it is a tie. Online rooms are temporary, so save art as PNG before leaving.</p><div class="dialog-actions"><button class="primary small-primary" id="helpCloseBtn">Got it!</button></div></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (() => {
@@ -757,7 +757,7 @@
         if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>notify(what==='code'?'Room code copied!':'Invite link copied!')).catch(()=>fallbackCopy(text));}
         else fallbackCopy(text); }
       function leaveOnline(){if(!online)return;clearTimeout(onlineArtTimer);if(onlineClockTimer)clearInterval(onlineClockTimer);onlineClockTimer=null;
-        const previous=online;online=null;previous.source?.close();$('#roomBanner').hidden=true;$('#boards').classList.remove('mine-second','online-solo','focused');boards.forEach(b=>b.root.classList.remove('in-focus'));$('#voteRules').textContent='Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.';
+        const previous=online;online=null;previous.source?.close();$('#roomBanner').hidden=true;$('#boards').classList.remove('mine-second','online-solo','focused');boards.forEach(b=>b.root.classList.remove('in-focus'));$('#voteRules').textContent='Local judging: choose your favorite artwork. Ties award a point to every artist.';
         boards.forEach(b=>b.root.classList.remove('online-locked','online-mine'));$$('[data-vote]').forEach(b=>b.disabled=false);
         $('#rematchBtn').disabled=false;$('#nextRoundBtn').disabled=false;$$('[data-vote]').forEach(b=>b.disabled=false);setStage('lobby');notify('Left online room.');}
       async function connectOnline(mode){
