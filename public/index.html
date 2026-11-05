@@ -317,6 +317,22 @@
     .prompt-round-card .waiting-hint{margin:8px 0 18px}
     @media(max-width:600px){.prompt-round-card .prompt-local-fields{grid-template-columns:1fr}.prompt-round-page{padding:20px 0}}
     #newPromptBtn { display:none !important; }
+    /* 2–6 artists: flexible setup, waiting room, results and voting layouts */
+    .waiting-players{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+    .vote-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr))}
+    .scoreboard{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));max-width:1000px;gap:12px}
+    .scoreboard .score-num{font-size:clamp(30px,4vw,58px)}
+    .scoreboard .versus-text{display:none}
+    .recap-item{display:flex;align-items:flex-start;flex-wrap:wrap}
+    .recap-item .recap-text{flex:1 1 220px}
+    .recap-item a{flex:0 1 155px;min-width:100px}
+    .recap-item a img{width:100%;max-width:155px;aspect-ratio:900/560;object-fit:contain}
+    .game .boards.online-solo{grid-template-columns:minmax(0,1fr)}
+    .player-board[data-player="2"]{--accent:var(--cyan)}
+    .player-board[data-player="3"]{--accent:var(--lime)}
+    .player-board[data-player="4"]{--accent:#ffc48d}
+    .player-board[data-player="5"]{--accent:#f5a4e2}
+    @media(max-width:700px){.scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.recap-item a{flex:1 1 120px}}
     /* Canvas viewport zoom: buttons never affect the saved art pixels. */
     .game .canvas-frame canvas,.game .grid-overlay{transform-origin:0 0;will-change:transform}
     .zoom-controls{display:inline-flex;align-items:center;gap:3px;flex-wrap:wrap}
@@ -393,8 +409,9 @@
         </div>
       </div>
       <form class="setup-card" id="setupForm">
-        <div class="card-top"><div><div class="eyebrow">Your battle arena</div><h2>Set up your clash</h2><p>Choose your settings first. Everyone writes their prompt when the round begins.</p></div><div class="corner-spark">⚡</div></div>
-        <div class="two-col">
+        <div class="card-top"><div><div class="eyebrow">Your battle arena</div><h2>Set up your clash</h2><p>Pick 2–6 artists, then write a new drawing prompt when each round begins.</p></div><div class="corner-spark">⚡</div></div>
+        <div class="field"><label for="playerCount">Number of players</label><select id="playerCount"><option value="2">2 players</option><option value="3">3 players</option><option value="4">4 players</option><option value="5">5 players</option><option value="6">6 players</option></select><div class="small-caption">For online games, everyone joins the same room code before the host starts. Local mode uses one device.</div></div>
+        <div class="two-col" id="localNameFields">
           <div class="field"><label for="name0"><span class="player-label"><span class="player-dot"></span> Player 1</span></label><input id="name0" maxlength="20" value="Player 1" autocomplete="off" required></div>
           <div class="field"><label for="name1"><span class="player-label"><span class="player-dot two"></span> Player 2</span></label><input id="name1" maxlength="20" value="Player 2" autocomplete="off" required></div>
         </div>
@@ -424,7 +441,7 @@
         <p class="muted">Send this room code or invite link to your friend.</p>
         <div class="room-code" id="waitingCode">------</div>
         <div class="waiting-actions"><button class="primary" id="copyInviteBtn">📋 Copy invite link</button><button class="secondary" id="copyCodeBtn">Copy code</button></div>
-        <div class="waiting-players"><div id="waitingPlayer0" class="waiting-player">⏳ Player 1</div><div id="waitingPlayer1" class="waiting-player">⏳ Waiting for friend...</div></div>
+        <div class="waiting-players" id="waitingPlayers"><div id="waitingPlayer0" class="waiting-player">⏳ Player 1</div><div id="waitingPlayer1" class="waiting-player">⏳ Waiting for friend...</div></div>
         <p class="waiting-hint" id="waitingHint">Once both artists join, the host starts the game. Then everyone will enter one prompt for round 1.</p>
         <button class="primary full" id="beginOnlineBtn" disabled>START ONLINE BATTLE →</button>
         <button class="secondary full" id="leaveWaitingBtn" style="margin-top:12px">Leave room</button>
@@ -464,11 +481,11 @@
       <div class="hint-strip">💡 Tip: Pick tools on each canvas independently. Use <kbd>B</kbd> brush, <kbd>E</kbd> eraser, <kbd>G</kbd> fill, <kbd>Ctrl Z</kbd> undo, or the focus button for a bigger canvas.</div>
     </section>
 
-    <section id="vote" class="screen vote-page" hidden><div class="eyebrow">Time to crown an artist</div><h2 class="section-title">THE BIG REVEAL!</h2><p class="section-sub"><strong id="votePrompt">Each artist drew a different challenge.</strong> Vote for your favorite drawing or call it a tie.</p><div class="vote-grid"><article class="art-card one"><div class="art-name"><span id="voteName0">Player 1</span><span class="index">ART #1</span></div><div class="vote-art-prompt" id="votePrompt0"></div><img id="voteImg0" alt="Player 1 completed artwork"><button class="vote-btn" data-vote="0" id="voteBtn0">🏆 Vote for Player 1</button><button class="mini" id="saveVote0" style="margin-top:10px">↓ Save artwork</button></article><article class="art-card two"><div class="art-name"><span id="voteName1">Player 2</span><span class="index">ART #2</span></div><div class="vote-art-prompt" id="votePrompt1"></div><img id="voteImg1" alt="Player 2 completed artwork"><button class="vote-btn" data-vote="1" id="voteBtn1">🏆 Vote for Player 2</button><button class="mini" id="saveVote1" style="margin-top:10px">↓ Save artwork</button></article></div><button class="tie-btn" data-vote="tie">🤝 It's a tie — both get 1 point</button><p class="vote-rules" id="voteRules">Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.</p></section>
+    <section id="vote" class="screen vote-page" hidden><div class="eyebrow">Time to crown an artist</div><h2 class="section-title">THE BIG REVEAL!</h2><p class="section-sub"><strong id="votePrompt">Each artist drew a different challenge.</strong> Vote for your favorite drawing or call it a tie.</p><div class="vote-grid" id="voteGrid"></div><button class="tie-btn" data-vote="tie">🤝 It's a tie — both get 1 point</button><p class="vote-rules" id="voteRules">Local judging: have a friend vote, or decide together. Winner gets 1 point; ties give both players 1 point.</p></section>
 
-    <section id="result" class="screen result-page" hidden><div class="eyebrow" id="resultRound">Round 1 complete</div><div class="result-medal" id="resultMedal">🏆</div><h2 class="result-message" id="resultTitle">Player 1 wins!</h2><p class="section-sub" id="resultText">What a masterpiece. On to the next challenge.</p><div class="scoreboard"><div><div class="score-name" id="resultName0">Player 1</div><strong class="score-num" id="resultScore0">1</strong></div><div class="versus-text">VS</div><div><div class="score-name" id="resultName1">Player 2</div><strong class="score-num" id="resultScore1">0</strong></div></div><div class="actions-center"><button class="primary" id="nextRoundBtn">NEXT ROUND <svg class="ic"><use href="#ic-play"/></svg></button></div></section>
+    <section id="result" class="screen result-page" hidden><div class="eyebrow" id="resultRound">Round 1 complete</div><div class="result-medal" id="resultMedal">🏆</div><h2 class="result-message" id="resultTitle">Player 1 wins!</h2><p class="section-sub" id="resultText">What a masterpiece. On to the next challenge.</p><div class="scoreboard" id="resultScoreboard"></div><div class="actions-center"><button class="primary" id="nextRoundBtn">NEXT ROUND <svg class="ic"><use href="#ic-play"/></svg></button></div></section>
 
-    <section id="final" class="screen final-page" hidden><div class="eyebrow">The showdown is over</div><div class="final-crown" id="finalCrown">👑</div><h2 class="section-title" id="finalTitle">A NEW CHAMPION!</h2><p class="section-sub" id="finalSubtitle">That was legendary.</p><div class="scoreboard"><div><div class="score-name" id="finalName0">Player 1</div><strong class="score-num" id="finalScore0">0</strong></div><div class="versus-text">VS</div><div><div class="score-name" id="finalName1">Player 2</div><strong class="score-num" id="finalScore1">0</strong></div></div><div class="actions-center"><button class="primary" id="rematchBtn">⚡ PLAY AGAIN</button><button class="secondary" id="copyResultsBtn">Copy results</button><button class="secondary" id="newPlayersBtn">New players</button></div><div class="recap"><h3>🖼️ Your battle gallery</h3><div class="recap-list" id="recapList"></div><p class="small-caption">Tip: Right-click an artwork or use the save links to keep your drawings.</p></div></section>
+    <section id="final" class="screen final-page" hidden><div class="eyebrow">The showdown is over</div><div class="final-crown" id="finalCrown">👑</div><h2 class="section-title" id="finalTitle">A NEW CHAMPION!</h2><p class="section-sub" id="finalSubtitle">That was legendary.</p><div class="scoreboard" id="finalScoreboard"></div><div class="actions-center"><button class="primary" id="rematchBtn">⚡ PLAY AGAIN</button><button class="secondary" id="copyResultsBtn">Copy results</button><button class="secondary" id="newPlayersBtn">New players</button></div><div class="recap"><h3>🖼️ Your battle gallery</h3><div class="recap-list" id="recapList"></div><p class="small-caption">Tip: Right-click an artwork or use the save links to keep your drawings.</p></div></section>
 
     <footer class="footer-note">✳ DRAWDUEL — Art battles with friends. Local mode works offline; online mode requires the game server.</footer>
   </div>
