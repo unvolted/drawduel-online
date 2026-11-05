@@ -800,69 +800,85 @@
           finally{who.artBusy=false;if(online===who&&who.artPending){who.artPending=false;onlineArtUpdate(index,true);}}
         },immediate?0:190);
       }
-      function syncOnlineState(s){if(!online||s.code!==online.code)return;
-        const previousStage=online.lastStage, previousRound=online.lastRound;
-        state.settings=s.settings;state.round=s.round;state.prompt=s.prompt;state.prompts=null;state.scores=s.scores;state.gallery=s.gallery;
-        state.mode=s.mode;state.remaining=(s.mode==='drawing'?Math.max(0,s.endAt-Date.now()):s.remainingMs)/1000;
-        if(s.stage==='waiting'){
-          $('#boards').classList.remove('online-solo','focused');
-          $('#waitingCode').textContent=s.code;
-          s.players.forEach((p,i)=>{const el=$('#waitingPlayer'+i);el.textContent=p?(p.online?'🟢 ':'⚪ ')+p.name:'⏳ Waiting for friend...';el.classList.toggle('online',Boolean(p?.online));});
-          const ready=s.players.every(p=>p?.online);
-          $('#beginOnlineBtn').disabled=online.seat!==0||!ready;
-          $('#beginOnlineBtn').textContent=online.seat===0?'START GAME →':'WAITING FOR HOST TO START';
-          $('#waitingHint').textContent=ready?(online.seat===0?'Both players joined! Start the game to collect your first prompts.':'Ready! The host will open round 1 prompts.'):'Waiting for both artists to join...';
-          setStage('waiting');
-        }else if(s.stage==='prompts'){
-          const entering=previousStage!=='prompts'||previousRound!==s.round;
-          if(entering){$('#promptMy').value='';}
-          $('#promptRoundTitle').textContent='ROUND '+s.round+' / '+s.settings.rounds+' · NEW PROMPT';
-          $('#promptLocalFields').hidden=true;$('#promptOnlineField').hidden=false;
-          const submitted=Boolean(s.promptsReady?.[online.seat]);
-          const readyCount=(s.promptsReady||[]).filter(Boolean).length;
-          $('#promptRoundSubmit').disabled=submitted;
-          $('#promptMy').disabled=submitted;
-          $('#promptRoundSubmit').textContent=submitted?'✓ PROMPT SUBMITTED':"SUBMIT MY ONE PROMPT →";
-          $('#promptRoundStatus').textContent=submitted
-             ? 'Your prompt is in ('+readyCount+'/2). Waiting for the other player...'
-             : 'Each player submits ONE prompt ('+readyCount+'/2 ready). You will draw the other player’s prompt.';
-          setStage('prompts');
-          if(entering&&!submitted)$('#promptMy').focus();
-        }else if(s.stage==='battle'){
-          const reset=previousRound!==s.round||previousStage!=='battle';
-          if(reset)boards.forEach((b,i)=>restoreOnlineBoard(i,s.art[i]));
-          state.active=online.seat;
-          $('#roomBanner').hidden=false;
-          $('#roomBannerText').textContent=`🌐 ROOM ${online.code} · YOU ARE ${s.settings.names[online.seat]} · ${s.players.filter(p=>p?.online).length}/2 CONNECTED`;
-          $('#boards').classList.remove('focused');$('#boards').classList.add('online-solo');$('#boards').classList.toggle('mine-second',online.seat===1);boards.forEach((b,i)=>{b.root.classList.remove('in-focus');b.root.classList.toggle('online-mine',online.seat===i);b.root.classList.toggle('online-locked',online.seat!==i);});
-          renderBattle();setStage('battle');
-          if(!onlineClockTimer)onlineClockTimer=setInterval(()=>{if(!online||state.stage!=='battle'||state.mode!=='drawing')return;state.remaining=Math.max(0,(online.endAt-Date.now())/1000);renderTimer();},100);
-          online.endAt=s.endAt;
-        }else if(s.stage==='vote'){
-          stopClock();state.art=s.art.map((a,i)=>a||boards[i].canvas.toDataURL('image/png'));
-          s.settings.names.forEach((name,i)=>{$('#voteName'+i).textContent=name;$('#voteImg'+i).src=state.art[i];$('#voteBtn'+i).textContent='🏆 Vote for '+name;});
-          $('#votePrompt').textContent='Two different challenges — two unique drawings.';
-          (s.drawPrompts||[]).forEach((p,i)=>{$('#votePrompt'+i).textContent='Challenge: '+p;});
-          $('[data-vote]').forEach(b=>b.disabled=s.voted);
-          $('#voteRules').textContent=s.voted?`Vote submitted (${s.votesCast}/2). Waiting for the other artist...`:`Each artist votes once. Matching votes pick a winner; split votes mean a tie. (${s.votesCast}/2 votes cast)`;
-          $('#roomBanner').hidden=true;setStage('vote');
-        }else if(s.stage==='result'){
-          $('#resultRound').textContent=`Round ${s.round} of ${s.settings.rounds} complete`;
-          $('#resultMedal').textContent=s.winner==='tie'?'🤝':'🏆';
-          $('#resultTitle').textContent=s.winner==='tie'?"IT'S A TIE!":`${s.settings.names[s.winner]} wins!`;
-          $('#resultText').textContent=s.winner==='tie'?'Both artists get a point.': 'The votes are in!';
-          for(let i=0;i<2;i++){$('#resultName'+i).textContent=s.settings.names[i];$('#resultScore'+i).textContent=s.scores[i];}
-          $('#nextRoundBtn').innerHTML=s.round>=s.settings.rounds?'SEE THE CHAMPION →':'NEXT ROUND '+icon('ic-play');
-          $('#nextRoundBtn').disabled=online.seat!==0;
-          if(online.seat!==0)$('#resultText').textContent+=' Waiting for the host to continue.';
-          setStage('result');
-        }else if(s.stage==='final'){
-          finishGame();$('#rematchBtn').disabled=online.seat!==0;
-          if(online.seat!==0)$('#rematchBtn').textContent='Waiting for host to play again';
-          else $('#rematchBtn').textContent='⚡ PLAY AGAIN';
-        }
-        online.lastStage=s.stage;online.lastRound=s.round;
-      }
+      function syncOnlineState(packet){
+  if(!online||packet.code!==online.code)return;
+  const previousStage=online.lastStage,previousRound=online.lastRound;
+  const n=packet.players.length;
+  state.settings=packet.settings;state.round=packet.round;state.prompt=packet.prompt;
+  state.prompts=null;state.scores=packet.scores;state.gallery=packet.gallery;
+  state.mode=packet.mode;
+  state.remaining=(packet.mode==='drawing'?Math.max(0,packet.endAt-Date.now()):packet.remainingMs)/1000;
+  syncBoards(n);
+  if(online.receivedArt.length!==n)online.receivedArt=Array(n).fill(0);
+  if(packet.stage==='waiting'){
+    $('#boards').classList.remove('online-solo','focused');
+    $('#waitingCode').textContent=packet.code;
+    $('#waitingPlayers').innerHTML=packet.players.map((p,i)=>'<div class="waiting-player '+(p?.online?'online':'')+'">'+(p?(p.online?'🟢 ':'⚪ ')+esc(p.name):'⏳ Waiting for player '+(i+1))+'</div>').join('');
+    const ready=packet.players.every(p=>p?.online);
+    const present=packet.players.filter(p=>p?.online).length;
+    $('#beginOnlineBtn').disabled=online.seat!==0||!ready;
+    $('#beginOnlineBtn').textContent=online.seat===0?'START GAME →':'WAITING FOR HOST TO START';
+    $('#waitingHint').textContent=ready?(online.seat===0?'Everyone is ready! Start the game to collect round 1 prompts.':'Waiting for the host to start the game.'):'Waiting for '+(n-present)+' more of '+n+' players to join...';
+    setStage('waiting');
+  }else if(packet.stage==='prompts'){
+    const entering=previousStage!=='prompts'||previousRound!==packet.round;
+    if(entering){$('#promptMy').value='';}
+    $('#promptRoundTitle').textContent='ROUND '+packet.round+' / '+packet.settings.rounds+' · NEW PROMPT';
+    $('#promptLocalFields').hidden=true;$('#promptOnlineField').hidden=false;
+    const submitted=Boolean(packet.promptsReady?.[online.seat]);
+    const readyCount=(packet.promptsReady||[]).filter(Boolean).length;
+    $('#promptRoundSubmit').disabled=submitted;$('#promptMy').disabled=submitted;
+    $('#promptRoundSubmit').textContent=submitted?'✓ PROMPT SUBMITTED':'SUBMIT MY ONE PROMPT →';
+    $('#promptRoundStatus').textContent=submitted
+      ?'Your prompt is in ('+readyCount+'/'+n+'). Waiting for the other players...'
+      :'Each artist submits ONE prompt ('+readyCount+'/'+n+' ready). You will draw another player’s challenge.';
+    setStage('prompts');if(entering&&!submitted)$('#promptMy').focus();
+  }else if(packet.stage==='battle'){
+    const reset=previousRound!==packet.round||previousStage!=='battle';
+    if(reset)boards.forEach((board,i)=>restoreOnlineBoard(i,packet.art[i]));
+    state.active=online.seat;
+    $('#roomBanner').hidden=false;
+    $('#roomBannerText').textContent='🌐 ROOM '+online.code+' · YOU ARE '+packet.settings.names[online.seat]+' · '+packet.players.filter(p=>p?.online).length+'/'+n+' CONNECTED';
+    $('#boards').classList.remove('focused');
+    $('#boards').classList.add('online-solo');
+    boards.forEach((board,i)=>{
+      board.root.classList.remove('in-focus');
+      board.root.classList.toggle('online-mine',online.seat===i);
+      board.root.classList.toggle('online-locked',online.seat!==i);
+    });
+    renderBattle();setStage('battle');
+    if(!onlineClockTimer)onlineClockTimer=setInterval(()=>{
+      if(!online||state.stage!=='battle'||state.mode!=='drawing')return;
+      state.remaining=Math.max(0,(online.endAt-Date.now())/1000);renderTimer();
+    },100);
+    online.endAt=packet.endAt;
+  }else if(packet.stage==='vote'){
+    stopClock();
+    state.art=packet.art.map((img,i)=>img||boards[i].canvas.toDataURL('image/png'));
+    renderVoteGrid(packet.settings.names,packet.drawPrompts,state.art);
+    $('#votePrompt').textContent='Each player drew a different challenge.';
+    $$('[data-vote]').forEach(b=>b.disabled=packet.voted);
+    $('#voteRules').textContent=packet.voted
+      ?'Vote submitted ('+packet.votesCast+'/'+n+'). Waiting for others...'
+      :'Each artist votes once. The highest vote total wins; a tie is possible. ('+packet.votesCast+'/'+n+' votes cast)';
+    $('#roomBanner').hidden=true;setStage('vote');
+  }else if(packet.stage==='result'){
+    $('#resultRound').textContent='Round '+packet.round+' of '+packet.settings.rounds+' complete';
+    $('#resultMedal').textContent=packet.winner==='tie'?'🤝':'🏆';
+    $('#resultTitle').textContent=packet.winner==='tie'?"IT'S A TIE!":packet.settings.names[packet.winner]+' wins!';
+    $('#resultText').textContent=packet.winner==='tie'?'Every artist gets a point.':'The votes are in!';
+    renderScoreboard('result');
+    $('#nextRoundBtn').innerHTML=packet.round>=packet.settings.rounds?'SEE THE CHAMPION →':'NEXT ROUND '+icon('ic-play');
+    $('#nextRoundBtn').disabled=online.seat!==0;
+    if(online.seat!==0)$('#resultText').textContent+=' Waiting for the host to continue.';
+    setStage('result');
+  }else if(packet.stage==='final'){
+    finishGame();
+    $('#rematchBtn').disabled=online.seat!==0;
+    $('#rematchBtn').textContent=online.seat!==0?'Waiting for host to play again':'⚡ PLAY AGAIN';
+  }
+  online.lastStage=packet.stage;online.lastRound=packet.round;
+}
       $('#createOnlineBtn').addEventListener('click',()=>connectOnline('create'));
       $('#joinOnlineBtn').addEventListener('click',()=>connectOnline('join'));
       $('#copyInviteBtn').addEventListener('click',()=>onlineCopy('link'));
